@@ -48,7 +48,7 @@ with app.app_context():
         admin = User(username='admin', password='adminpassword')
         db.session.add(admin)
         db.session.commit()
-        print("Default admin user created: admin / adminpassword")
+        # print("Default admin user created: admin / adminpassword")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
