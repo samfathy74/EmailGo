@@ -22,13 +22,8 @@ def get_file_templates():
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 app = Flask(__name__)
-# Database configuration
-database_url = os.environ.get('DATABASE_URL')
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url or r'sqlite:///email_marketing.db'
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'warzone_secure_key_998877' # Changed to a more "secure" looking key
+app.config['SQLALCHEMY_DATABASE_URI'] = r'sqlite:///email_marketing.db'
+app.config['SECRET_KEY'] = 'warzone_secure_key_998877' # Changed to a more "secure" looking key
 db.init_app(app)
 
 login_manager = LoginManager()
@@ -39,7 +34,7 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 with app.app_context():
     db.create_all()
@@ -48,7 +43,7 @@ with app.app_context():
         admin = User(username='admin', password='adminpassword')
         db.session.add(admin)
         db.session.commit()
-        # print("Default admin user created: admin / adminpassword")
+        print("Default admin user created: admin / adminpassword")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -217,7 +212,7 @@ def check_replies_manual():
 @login_required
 def resend_campaign_single(reply_id):
     reply = Reply.query.get_or_404(reply_id)
-    campaign = Campaign.query.get(reply.campaign_id) if reply.campaign_id else None
+    campaign = db.session.get(Campaign, reply.campaign_id) if reply.campaign_id else None
     
     if not campaign:
         flash('Associated campaign not found.', 'error')
@@ -228,7 +223,7 @@ def resend_campaign_single(reply_id):
         flash('No primary server configured.', 'error')
         return redirect(url_for('replies'))
         
-    template = Template.query.get(campaign.template_id)
+    template = db.session.get(Template, campaign.template_id)
     if not template:
         flash('Campaign template not found.', 'error')
         return redirect(url_for('replies'))
@@ -345,10 +340,10 @@ def contacts():
             group_id = request.form.get('group_id')
             contact_ids = request.form.getlist('contact_ids') # Assuming checkboxes
             if group_id and contact_ids:
-                group = ContactGroup.query.get(group_id)
+                group = db.session.get(ContactGroup, group_id)
                 count = 0
                 for cid in contact_ids:
-                    contact = Contact.query.get(cid)
+                    contact = db.session.get(Contact, cid)
                     if contact and group not in contact.groups:
                         contact.groups.append(group)
                         count += 1
@@ -363,7 +358,7 @@ def contacts():
             if manual_entry:
                 count = 0
                 lines = manual_entry.replace(',', '\n').split('\n')
-                group = ContactGroup.query.get(group_id) if group_id else None
+                group = db.session.get(ContactGroup, group_id) if group_id else None
                 
                 for line in lines:
                     email = line.strip()
@@ -402,7 +397,7 @@ def contacts():
                         return redirect(url_for('contacts'))
                     
                     count = 0
-                    group = ContactGroup.query.get(group_id) if group_id else None
+                    group = db.session.get(ContactGroup, group_id) if group_id else None
                     
                     for row in data:
                         email = row.get('Email') or row.get('email')
@@ -503,7 +498,7 @@ def campaigns():
         
         # Calculate contacts count based on group
         if target_group_id:
-            group = ContactGroup.query.get(target_group_id)
+            group = db.session.get(ContactGroup, target_group_id)
             contacts_count = len(group.contacts) if group else 0
         else:
             contacts_count = Contact.query.filter_by(status='active').count()
@@ -541,7 +536,7 @@ def duplicate_campaign(campaign_id):
         
     # Recalculate count
     if original.target_group_id:
-        group = ContactGroup.query.get(original.target_group_id)
+        group = db.session.get(ContactGroup, original.target_group_id)
         contacts_count = len(group.contacts) if group else 0
     else:
         contacts_count = Contact.query.filter_by(status='active').count()
@@ -561,7 +556,7 @@ def duplicate_campaign(campaign_id):
 
 def send_campaign_emails(campaign_id):
     with app.app_context():
-        campaign = Campaign.query.get(campaign_id)
+        campaign = db.session.get(Campaign, campaign_id)
         if not campaign:
             return
         
@@ -572,7 +567,7 @@ def send_campaign_emails(campaign_id):
             print("No primary server configured.")
             return
         
-        template = Template.query.get(campaign.template_id)
+        template = db.session.get(Template, campaign.template_id)
         if not template:
             campaign.status = 'failed'
             db.session.commit()
