@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Marketing System</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📧</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/tailwindcss.js') }}"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            900: '#050505',
+                            800: '#121212',
+                            700: '#1a1a1a',
+                            600: '#2d2d2d',
+                        },
+                        indigo: {
+                            500: '#ff0000',
+                            600: '#cc0000',
+                        },
+                        red: {
+                            500: '#ff0000',
+                            600: '#cc0000',
+                            900: '#4a0000',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Rajdhani', 'sans-serif'],
+                        display: ['"Black Ops One"', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for dark mode */
+        .dark ::-webkit-scrollbar {
+            width: 8px;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #050505; 
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 4px;
+            border: 1px solid #4a0000;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #ff0000; 
+        }
+        
+        /* Warzone Utilities */
+        .warzone-border {
+            border: 1px solid rgba(255, 0, 0, 0.2);
+        }
+        .warzone-glow {
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.1);
+        }
+        .warzone-text-glow {
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+        
+        /* Arabic Font Overrides */
+        :lang(ar), :lang(ar) .font-display, :lang(ar) .font-mono, :lang(ar) .font-sans {
+            font-family: 'Cairo', sans-serif !important;
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="bg-white dark:bg-gray-800 border-e border-gray-200 dark:border-red-900/30 flex flex-col fixed md:relative z-50 h-full transition-all duration-300 overflow-hidden w-64 -translate-x-full md:translate-x-0 md:w-20 group">
+            <div class="p-6 flex items-center justify-between h-20">
+                <h1 id="brand-text" class="text-3xl font-display text-red-600 dark:text-red-500 tracking-wider warzone-text-glow whitespace-nowrap transition-opacity duration-300 hidden" data-i18n="brand">EmailGo</h1>
+                <h1 id="brand-icon" class="text-3xl font-display text-red-600 dark:text-red-500 tracking-wider warzone-text-glow whitespace-nowrap transition-opacity duration-300 hidden">⨊</h1>
+                <button id="sidebar-close" class="md:hidden text-gray-500 hover:text-red-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <nav class="flex-1 px-4 space-y-2 overflow-y-auto overflow-x-hidden">
+                {% set active_classes = 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-500' %}
+                {% set inactive_classes = 'text-gray-700 dark:text-gray-300 border-transparent hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-500' %}
+
+                <a href="{{ url_for('dashboard') }}" class="flex items-center justify-center px-4 py-3 rounded-none border-l-2 transition-all font-medium uppercase tracking-wide text-sm {{ active_classes if request.endpoint == 'dashboard' else inactive_classes }}">
+                    <span class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg></span>
+                    <span data-i18n="dashboard" class="hidden">Dashboard</span>
+                </a>
+                <a href="{{ url_for('contacts') }}" class="flex items-center justify-center px-4 py-3 rounded-none border-l-2 transition-all font-medium uppercase tracking-wide text-sm {{ active_classes if request.endpoint == 'contacts' else inactive_classes }}">
+                    <span class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg></span>
+                    <span data-i18n="contacts" class="hidden">Contacts</span>
+                </a>
+                <a href="{{ url_for('templates') }}" class="flex items-center justify-center px-4 py-3 rounded-none border-l-2 transition-all font-medium uppercase tracking-wide text-sm {{ active_classes if request.endpoint == 'templates' else inactive_classes }}">
+                    <span class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></span>
+                    <span data-i18n="templates" class="hidden">Templates</span>
+                </a>
+                <a href="{{ url_for('campaigns') }}" class="flex items-center justify-center px-4 py-3 rounded-none border-l-2 transition-all font-medium uppercase tracking-wide text-sm {{ active_classes if request.endpoint == 'campaigns' else inactive_classes }}">
+                    <span class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg></span>
+                    <span data-i18n="campaigns" class="hidden">Campaigns</span>
+                </a>
+                <a href="{{ url_for('replies') }}" class="flex items-center justify-center px-4 py-3 rounded-none border-l-2 transition-all font-medium uppercase tracking-wide text-sm {{ active_classes if request.endpoint == 'replies' else inactive_classes }}">
+                    <span class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg></span>
+                    <span data-i18n="replies" class="hidden">Replies</span>
+                </a>
+                <a href="{{ url_for('settings') }}" class="flex items-center justify-center px-4 py-3 rounded-none border-l-2 transition-all font-medium uppercase tracking-wide text-sm {{ active_classes if request.endpoint == 'settings' else inactive_classes }}">
+                    <span class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></span>
+                    <span data-i18n="settings" class="hidden">Settings</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-200 dark:border-red-900/30">
+                <button id="theme-toggle" class="flex items-center justify-center w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors uppercase font-bold tracking-wider">
+                    <span id="theme-toggle-light-icon" class="hidden w-5 h-5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </span>
+                    <span id="theme-toggle-dark-icon" class="hidden w-5 h-5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    </span>
+                    <span id="theme-text" class="ms-2 whitespace-nowrap hidden" data-i18n="toggle_theme">Toggle Theme</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Bar -->
+            <header class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-red-900/30">
+                <div class="flex items-center">
+                    <button id="sidebar-toggle" class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500 focus:outline-none me-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <h2 class="text-xl font-display text-gray-800 dark:text-white tracking-wider" data-i18n="operations">OPERATIONS</h2>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="lang-toggle" class="px-3 py-1 text-sm font-bold border border-gray-300 dark:border-red-900 rounded text-gray-600 dark:text-red-500 hover:bg-gray-100 dark:hover:bg-red-900/20 transition-colors">
+                        EN / AR
+                    </button>
+                    <a href="{{ url_for('logout') }}" class="px-3 py-1 text-sm font-bold border border-red-300 dark:border-red-900 rounded text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        <span data-i18n="logout">Logout</span>
+                    </a>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 md:p-8 relative" id="main-content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="mb-4 p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200{% else %}bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode toggle logic
+        var themeToggleBtn = document.getElementById('theme-toggle');
+        var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        // Change the icons inside the button based on previous settings
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            if (themeToggleLightIcon) themeToggleLightIcon.classList.remove('hidden');
+            document.documentElement.classList.add('dark');
+        } else {
+            if (themeToggleDarkIcon) themeToggleDarkIcon.classList.remove('hidden');
+            document.documentElement.classList.remove('dark');
+        }
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', function() {
+                // toggle icons inside button
+                themeToggleDarkIcon.classList.toggle('hidden');
+                themeToggleLightIcon.classList.toggle('hidden');
+
+                // if set via local storage previously
+                if (localStorage.getItem('color-theme')) {
+                    if (localStorage.getItem('color-theme') === 'light') {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    }
+
+                // if NOT set via local storage previously
+                } else {
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    }
+                }
+            });
+        }
+
+        // Sidebar Toggle Logic
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebar-close');
+        const brandText = document.getElementById('brand-text');
+        const brandIcon = document.getElementById('brand-icon');
+        const themeText = document.getElementById('theme-text');
+
+        function getHiddenClass() {
+            return document.documentElement.dir === 'rtl' ? 'translate-x-full' : '-translate-x-full';
+        }
+
+        function toggleSidebar() {
+            const hiddenClass = getHiddenClass();
+            
+            if (window.innerWidth >= 768) {
+                // Desktop behavior
+                if (sidebar.classList.contains('md:w-20')) {
+                    // EXPAND
+                    sidebar.classList.remove('md:w-20');
+                    
+                    // Show text elements
+                    brandText.classList.remove('hidden');
+                    brandIcon.classList.add('hidden');
+                    themeText.classList.remove('hidden');
+                    
+                    // Show all nav text spans
+                    document.querySelectorAll('nav a span[data-i18n]').forEach(el => el.classList.remove('hidden'));
+                    
+                    // Restore alignment (Left align with margin)
+                    document.querySelectorAll('nav a').forEach(el => {
+                        el.classList.remove('justify-center');
+                        el.querySelector('span:first-child').classList.add('me-3');
+                    });
+
+                    // Save state
+                    localStorage.setItem('sidebarState', 'expanded');
+                    
+                } else {
+                    // COLLAPSE
+                    sidebar.classList.add('md:w-20');
+                    
+                    // Hide text elements
+                    brandText.classList.add('hidden');
+                    brandIcon.classList.remove('hidden');
+                    themeText.classList.add('hidden');
+                    
+                    // Hide all nav text spans
+                    document.querySelectorAll('nav a span[data-i18n]').forEach(el => el.classList.add('hidden'));
+                    
+                    // Center icons
+                    document.querySelectorAll('nav a').forEach(el => {
+                        el.classList.add('justify-center');
+                        el.querySelector('span:first-child').classList.remove('me-3');
+                    });
+
+                    // Save state
+                    localStorage.setItem('sidebarState', 'collapsed');
+                }
+            } else {
+                // Mobile behavior: Slide in/out
+                if (sidebar.classList.contains(hiddenClass)) {
+                    sidebar.classList.remove(hiddenClass);
+                    // Ensure text is visible on mobile
+                    brandText.classList.remove('hidden');
+                    brandIcon.classList.add('hidden');
+                    themeText.classList.remove('hidden');
+                    document.querySelectorAll('nav a span[data-i18n]').forEach(el => el.classList.remove('hidden'));
+                    document.querySelectorAll('nav a').forEach(el => {
+                        el.classList.remove('justify-center');
+                        el.querySelector('span:first-child').classList.add('me-3');
+                    });
+                } else {
+                    sidebar.classList.add(hiddenClass);
+                }
+            }
+        }
+
+        // Initialize Sidebar State
+        function initSidebar() {
+            // Set initial hidden state based on direction for mobile
+             const hiddenClass = getHiddenClass();
+             // Ensure correct class is present if not md
+             if (window.innerWidth < 768) {
+                 sidebar.classList.remove('-translate-x-full', 'translate-x-full');
+                 sidebar.classList.add(hiddenClass);
+             }
+
+            if (window.innerWidth >= 768) {
+                const state = localStorage.getItem('sidebarState');
+                if (state === 'expanded') {
+                    // Manually trigger expand logic without toggling
+                    sidebar.classList.remove('md:w-20');
+                    brandText.classList.remove('hidden');
+                    brandIcon.classList.add('hidden');
+                    themeText.classList.remove('hidden');
+                    document.querySelectorAll('nav a span[data-i18n]').forEach(el => el.classList.remove('hidden'));
+                    document.querySelectorAll('nav a').forEach(el => {
+                        el.classList.remove('justify-center');
+                        el.querySelector('span:first-child').classList.add('me-3');
+                    });
+                } else {
+                    // Default to collapsed or if state is collapsed
+                    brandText.classList.add('hidden');
+                    brandIcon.classList.remove('hidden');
+                }
+            }
+        }
+        
+        // Call init immediately
+        initSidebar();
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+        }
+        if (sidebarClose) {
+            sidebarClose.addEventListener('click', toggleSidebar);
+        }
+
+        // Language Toggle Logic
+        const langToggle = document.getElementById('lang-toggle');
+        const html = document.documentElement;
+        let translations = {};
+
+        function updateLanguage(lang) {
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = translations[lang][key];
+                    } else {
+                        el.innerHTML = translations[lang][key];
+                    }
+                }
+            });
+            
+            // Update direction and lang attribute
+            if (lang === 'ar') {
+                html.setAttribute('dir', 'rtl');
+                html.setAttribute('lang', 'ar');
+                document.body.style.fontFamily = "'Cairo', sans-serif";
+            } else {
+                html.setAttribute('dir', 'ltr');
+                html.setAttribute('lang', 'en');
+                document.body.style.fontFamily = "'Rajdhani', sans-serif";
+            }
+            localStorage.setItem('lang', lang);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch("{{ url_for('static', filename='translations.json') }}")
+                .then(response => response.json())
+                .then(data => {
+                    translations = data;
+                    const savedLang = localStorage.getItem('lang') || 'en';
+                    updateLanguage(savedLang);
+                })
+                .catch(error => console.error('Error loading translations:', error));
+
+            if (langToggle) {
+                langToggle.addEventListener('click', () => {
+                    const currentLang = html.getAttribute('lang') === 'ar' ? 'en' : 'ar';
+                    updateLanguage(currentLang);
+                });
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

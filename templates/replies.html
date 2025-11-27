@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script src="{{ url_for('static', filename='js/marked.min.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <h2 class="text-3xl font-bold text-gray-800 dark:text-white" data-i18n="page_replies">Replies</h2>
+    <form action="{{ url_for('check_replies_manual') }}" method="POST" class="w-full md:w-auto inline" onsubmit="startCheckReplies()">
+        <button type="submit" class="w-full md:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium" data-i18n="check_replies">
+            Check for New Replies
+        </button>
+    </form>
+</div>
+
+<div class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <p class="text-sm text-blue-800 dark:text-blue-300" data-i18n="view_replies">View replies from your campaigns.</p>
+</div>
+
+<!-- Active Server Selection (Primary) -->
+<div class="mb-6 bg-blue-50 border border-blue-100 p-4 rounded-lg flex items-center justify-between">
+    <div>
+        <h3 class="text-sm font-semibold text-blue-900" data-i18n="active_primary_server">Active Primary Server</h3>
+        <p class="text-xs text-blue-700" data-i18n="primary_server_desc">Select which server acts as the primary server for sending and checking.</p>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+        {% for server in servers %}
+        <a href="{{ url_for('set_primary_server', server_id=server.id) }}" 
+           class="px-3 py-1 rounded-full text-xs font-medium border transition-colors {{ 'bg-green-600 text-white border-green-600 shadow-sm' if server.is_primary else 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50' }}">
+           {{ server.name }} {{ '(Active)' if server.is_primary }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+    <form action="{{ url_for('replies') }}" method="GET" class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="start_date">Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date or '' }}" class="border rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="end_date">End Date</label>
+            <input type="date" name="end_date" value="{{ end_date or '' }}" class="border rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="server_source">Server Source</label>
+            <select name="server_id" class="border rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-white">
+                <option value="" data-i18n="all_servers">All Servers</option>
+                {% for server in servers %}
+                <option value="{{ server.id }}" {% if selected_server_id == server.id %}selected{% endif %}>{{ server.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm" data-i18n="filter">Filter</button>
+        <a href="{{ url_for('replies') }}" class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm" data-i18n="clear">Clear</a>
+    </form>
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="sender">Sender</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="subject">Subject</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="page_campaigns">Campaign</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="received">Received</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            {% for reply in replies %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ reply.sender_email }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <div class="max-w-xs truncate flex items-center">
+                        {% if reply.has_attachments %}
+                        <svg class="w-4 h-4 text-gray-400 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                        </svg>
+                        {% endif %}
+                        {{ reply.subject }}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {% if reply.campaign %}
+                    {{ reply.campaign.name }}
+                    {% else %}
+                    <span class="text-gray-400">Unknown</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ reply.received_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-2">
+                    <button 
+                        type="button"
+                        onclick="openReplyModal(this)"
+                        data-sender="{{ reply.sender_email }}"
+                        data-subject="{{ reply.subject }}"
+                        data-date="{{ reply.received_at.strftime('%Y-%m-%d %H:%M') }}"
+                        data-cc="{{ reply.cc or '' }}"
+                        data-has-attachments="{{ 'true' if reply.has_attachments else 'false' }}"
+                        data-content="{{ reply.content }}"
+                        class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors" 
+                        title="View Reply">
+                        <span class="sr-only" data-i18n="view_reply">View Reply</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </button>
+                    <form action="{{ url_for('resend_campaign_single', reply_id=reply.id) }}" method="POST" class="inline" onsubmit="if(confirm('Are you sure you want to resend the campaign to this contact?')) { showLoading('Resending Campaign...'); return true; } else { return false; }">
+                        <button type="submit" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors" title="Resend Campaign">
+                            <span class="sr-only" data-i18n="resend_campaign">Resend Campaign</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </button>
+                    </form>
+                    <button 
+                        type="button"
+                        onclick="openFollowUpModal('{{ reply.id }}', '{{ reply.sender_email }}')"
+                        class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" 
+                        title="Follow Up">
+                        <span class="sr-only" data-i18n="follow_up">Follow Up</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                    </button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400" data-i18n="no_replies">No replies found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- View Reply Modal -->
+<div id="replyModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" data-i18n="reply_details">Reply Details</h3>
+                <button onclick="document.getElementById('replyModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                <div class="grid grid-cols-1 gap-2 text-sm">
+                    <div class="flex">
+                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="from">From:</span>
+                        <span id="modal-sender" class="text-gray-900 dark:text-white"></span>
+                    </div>
+                    <div class="flex">
+                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="subject">Subject:</span>
+                        <span id="modal-subject" class="text-gray-900 dark:text-white"></span>
+                    </div>
+                    <div class="flex">
+                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="date">Date:</span>
+                        <span id="modal-date" class="text-gray-900 dark:text-white"></span>
+                    </div>
+                    <div class="flex" id="modal-cc-container">
+                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="cc">CC:</span>
+                        <span id="modal-cc" class="text-gray-900 dark:text-white"></span>
+                    </div>
+                    <div class="flex" id="modal-attachments-container">
+                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="attach">Attach:</span>
+                        <span class="text-gray-900 dark:text-white">Yes</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prose dark:prose-invert max-w-none">
+                <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg p-4 min-h-[200px] whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200" id="modal-content"></div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button type="button" onclick="document.getElementById('replyModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500" data-i18n="cancel">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Follow Up Modal -->
+<div id="followUpModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" data-i18n="follow_up">Send Follow Up</h3>
+            <form id="followUpForm" method="POST" action="" onsubmit="showLoading('Sending Follow Up...');">
+                <input type="hidden" id="followup-reply-id" name="reply_id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="to">To</label>
+                    <input type="text" id="followup-to" readonly class="w-full border rounded-md px-3 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="subject">Subject</label>
+                    <input type="text" name="subject" required class="w-full border rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white" placeholder="Re: ...">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="message">Message</label>
+                    <textarea name="content" rows="5" required class="w-full border rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white"></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('followUpModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" data-i18n="send">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl flex flex-col items-center">
+        <svg class="animate-spin h-10 w-10 text-indigo-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white" id="loadingText" data-i18n="checking_replies">Checking for new replies...</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">This may take a few moments.</p>
+    </div>
+</div>
+
+<script>
+    function startCheckReplies() {
+        const modal = document.getElementById('loadingModal');
+        const text = document.getElementById('loadingText');
+        modal.classList.remove('hidden');
+        
+        const messages = [
+            "Connecting to secure server...",
+            "Authenticating credentials...",
+            "Scanning communication channels...",
+            "Decrypting incoming transmissions...",
+            "Filtering noise...",
+            "Finalizing report..."
+        ];
+        
+        let i = 0;
+        text.textContent = messages[0];
+        
+        const interval = setInterval(() => {
+            i++;
+            if (i < messages.length) {
+                text.textContent = messages[i];
+            } else {
+                clearInterval(interval);
+            }
+        }, 2500); // Change message every 2.5 seconds
+    }
+
+    function openReplyModal(button) {
+        const sender = button.getAttribute('data-sender');
+        const subject = button.getAttribute('data-subject');
+        const date = button.getAttribute('data-date');
+        const cc = button.getAttribute('data-cc');
+        const hasAttachments = button.getAttribute('data-has-attachments') === 'true';
+        const content = button.getAttribute('data-content');
+
+        document.getElementById('modal-sender').textContent = sender;
+        document.getElementById('modal-subject').textContent = subject;
+        document.getElementById('modal-date').textContent = date;
+        
+        const ccContainer = document.getElementById('modal-cc-container');
+        if (cc) {
+            document.getElementById('modal-cc').textContent = cc;
+            ccContainer.classList.remove('hidden');
+        } else {
+            ccContainer.classList.add('hidden');
+        }
+
+        const attachContainer = document.getElementById('modal-attachments-container');
+        if (hasAttachments) {
+            attachContainer.classList.remove('hidden');
+        } else {
+            attachContainer.classList.add('hidden');
+        }
+
+        // Use marked to parse the content
+        document.getElementById('modal-content').innerHTML = marked.parse(content);
+
+        document.getElementById('replyModal').classList.remove('hidden');
+    }
+
+    function openFollowUpModal(replyId, email) {
+        document.getElementById('followup-reply-id').value = replyId;
+        document.getElementById('followup-to').value = email;
+        document.getElementById('followUpForm').action = "/replies/" + replyId + "/followup";
+        document.getElementById('followUpModal').classList.remove('hidden');
+    }
+
+    function showLoading(text) {
+        if (text) {
+            document.getElementById('loadingText').textContent = text;
+        }
+        document.getElementById('loadingModal').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

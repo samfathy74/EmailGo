@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <h2 class="text-3xl font-bold text-gray-800 dark:text-white" data-i18n="contacts">Contacts</h2>
+    <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+        <div class="flex gap-2">
+            <!-- Create Group Button -->
+            <button onclick="document.getElementById('createGroupModal').classList.remove('hidden')" class="flex-1 md:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap" data-i18n="new_group">
+                New Group
+            </button>
+            <!-- Manual Add Button -->
+            <button onclick="document.getElementById('manualAddModal').classList.remove('hidden')" class="flex-1 md:flex-none px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap" data-i18n="manual_add">
+                Manual Add
+            </button>
+        </div>
+
+        <form action="{{ url_for('contacts') }}" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+            <input type="hidden" name="action" value="import_file">
+            <select name="group_id" class="border rounded-lg px-2 py-2 text-sm text-gray-700 dark:text-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto">
+                <option value="" data-i18n="no_group">No Group</option>
+                {% for group in groups %}
+                <option value="{{ group.id }}">{{ group.name }}</option>
+                {% endfor %}
+            </select>
+            <label class="block w-full sm:w-auto">
+                <span class="sr-only">Choose file</span>
+                <input type="file" name="file" accept=".xlsx,.json" class="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-indigo-50 file:text-indigo-700
+                  hover:file:bg-indigo-100
+                "/>
+            </label>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors w-full sm:w-auto" data-i18n="import">Import</button>
+        </form>
+    </div>
+</div>
+
+<div class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <p class="text-sm text-blue-800 dark:text-blue-300" data-i18n="manage_list">Manage your email list.</p>
+</div>
+
+<!-- Groups Summary -->
+<div class="mb-6 flex flex-wrap gap-2">
+    {% for group in groups %}
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+        {{ group.name }} ({{ group.contacts|length }})
+    </span>
+    {% endfor %}
+</div>
+
+<!-- Create Group Modal -->
+<div id="createGroupModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" data-i18n="create_new_group">Create New Group</h3>
+            <form action="{{ url_for('contacts') }}" method="POST">
+                <input type="hidden" name="action" value="create_group">
+                <div class="mb-4">
+                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="group_name" data-i18n="group_name">Group Name</label>
+                    <input type="text" name="group_name" id="group_name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="document.getElementById('createGroupModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" data-i18n="create_group">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Manual Add Modal -->
+<div id="manualAddModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" data-i18n="manually_add_contacts">Manually Add Contacts</h3>
+            <form action="{{ url_for('contacts') }}" method="POST">
+                <input type="hidden" name="action" value="manual_add">
+                <div class="mb-4">
+                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="manual_group" data-i18n="add_to_group">Add to Group (Optional)</label>
+                    <select name="group_id" id="manual_group" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="" data-i18n="no_group">No Group</option>
+                        {% for group in groups %}
+                        <option value="{{ group.id }}">{{ group.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="manual_entry" data-i18n="email_addresses">Email Addresses</label>
+                    <textarea name="manual_entry" id="manual_entry" rows="10" placeholder="Enter email addresses, one per line or separated by commas." data-i18n="enter_emails_placeholder" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="document.getElementById('manualAddModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700" data-i18n="add_contacts">Add Contacts</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="name">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="email">Email</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="company">Company</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="groups">Groups</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="status">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="added">Added</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-i18n="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            {% for contact in contacts %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ contact.name }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ contact.email }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ contact.company }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {% for group in contact.groups %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-1">
+                        {{ group.name }}
+                    </span>
+                    {% endfor %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        {{ contact.status }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ contact.created_at.strftime('%Y-%m-%d') }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex space-x-2">
+                    <button 
+                        type="button"
+                        data-id="{{ contact.id }}"
+                        data-name="{{ contact.name or '' }}"
+                        data-email="{{ contact.email }}"
+                        data-company="{{ contact.company or '' }}"
+                        onclick="openEditContactModal(this)" 
+                        class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 transition-colors" 
+                        title="Edit Contact">
+                        <span class="sr-only" data-i18n="edit">Edit</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    </button>
+                    <form action="{{ url_for('delete_contact', contact_id=contact.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this contact?');" style="display:inline;">
+                        <button type="submit" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 ml-2 transition-colors" title="Delete Contact">
+                            <span class="sr-only" data-i18n="delete">Delete</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400" data-i18n="no_contacts">No contacts found. Import a file to get started.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Edit Contact Modal -->
+<div id="editContactModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" data-i18n="edit_contact">Edit Contact</h3>
+            <form id="editContactForm" method="POST">
+                <div class="mb-4">
+                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="edit_name" data-i18n="name">Name</label>
+                    <input type="text" name="name" id="edit_name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="edit_email" data-i18n="email">Email</label>
+                    <input type="email" name="email" id="edit_email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="edit_company" data-i18n="company">Company</label>
+                    <input type="text" name="company" id="edit_company" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="document.getElementById('editContactModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" data-i18n="save_changes">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEditContactModal(button) {
+        const id = button.getAttribute('data-id');
+        const name = button.getAttribute('data-name');
+        const email = button.getAttribute('data-email');
+        const company = button.getAttribute('data-company');
+
+        document.getElementById('editContactForm').action = `/contacts/${id}/edit`;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_email').value = email;
+        document.getElementById('edit_company').value = company;
+        document.getElementById('editContactModal').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

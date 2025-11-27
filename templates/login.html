@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Tactical CRM</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/tailwindcss.js') }}"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Rajdhani', 'sans-serif'],
+                        display: ['Black Ops One', 'cursive'],
+                    },
+                    colors: {
+                        gray: {
+                            900: '#050505',
+                            800: '#121212',
+                            700: '#1a1a1a',
+                            600: '#2d2d2d',
+                        },
+                        red: {
+                            500: '#ff0000',
+                            600: '#cc0000',
+                            900: '#4a0000',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            background-image: radial-gradient(circle at 50% 50%, #1a0000 0%, #050505 100%);
+        }
+        .warzone-border {
+            border: 1px solid #333;
+            position: relative;
+        }
+        .warzone-border::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 10px; height: 10px;
+            border-top: 2px solid #ff0000;
+            border-left: 2px solid #ff0000;
+        }
+        .warzone-border::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; right: -1px;
+            width: 10px; height: 10px;
+            border-bottom: 2px solid #ff0000;
+            border-right: 2px solid #ff0000;
+        }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center text-gray-100 overflow-hidden">
+
+    <!-- Background Grid Effect -->
+    <div class="absolute inset-0 z-0 opacity-10 pointer-events-none" 
+         style="background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 40px 40px;">
+    </div>
+
+    <div class="relative z-10 w-full max-w-md px-6">
+        
+        <!-- Logo / Title -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-display text-white tracking-widest uppercase drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">
+                <span class="text-red-600">EMAIL</span>GO
+            </h1>
+            <p class="text-red-500 font-mono text-sm tracking-[0.3em] mt-2 opacity-80">SECURE ACCESS TERMINAL</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="bg-gray-800/80 backdrop-blur-md p-8 warzone-border shadow-2xl">
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-6 space-y-2">
+                        {% for category, message in messages %}
+                            <div class="p-3 text-sm font-bold border-l-4 {{ 'border-red-500 bg-red-900/30 text-red-200' if category == 'error' else 'border-green-500 bg-green-900/30 text-green-200' }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('login') }}" method="POST" class="space-y-6">
+                <input type="hidden" name="next" value="{{ next or '' }}">
+                
+                <div class="space-y-1">
+                    <label for="username" class="block text-xs font-mono text-gray-400 uppercase tracking-wider">Operator ID</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-500 group-focus-within:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <input id="username" name="username" type="text" required 
+                            value="{{ request.form.username or '' }}"
+                            class="block w-full pl-10 pr-3 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono" 
+                            placeholder="ENTER USERNAME">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label for="password" class="block text-xs font-mono text-gray-400 uppercase tracking-wider">Access Code</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-500 group-focus-within:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                        <input id="password" name="password" type="password" required 
+                            value="{{ request.form.password or '' }}"
+                            class="block w-full pl-10 pr-10 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono" 
+                            placeholder="ENTER PASSWORD">
+                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-red-500 focus:outline-none">
+                            <svg id="eye-icon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <svg id="eye-off-icon" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.574-2.59M6 6l2.267 2.267m0 0L8.268 8.268 9.542 7c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-1.574 2.59M18 18l-2.267-2.267m0 0L15.732 15.732 12 12m-3.732 3.732L6 6" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" 
+                    class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 uppercase tracking-widest transition-all transform hover:scale-[1.02] shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                    Authenticate
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-xs text-gray-600 font-mono">SYSTEM VERSION 2.0.4 // RESTRICTED AREA</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eye-icon');
+            const eyeOffIcon = document.getElementById('eye-off-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.add('hidden');
+                eyeOffIcon.classList.remove('hidden');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('hidden');
+                eyeOffIcon.classList.add('hidden');
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SEG Invest — Follow Up</title>
+<meta name="viewport" content="width=device-width">
+<style>
+@media only screen and (max-width:600px){ .container{width:100%!important;} }
+</style>
+</head>
+
+<body style="margin:0; padding:0; background:#eef3fa;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:20px 0;">
+<tr><td align="center">
+
+<table class="container" width="600" style="background:white; border-radius:6px;">
+
+<!-- HEADER -->
+<tr><td align="center" style="background:#003366; padding:20px;">
+  <img src="https://seginvest.com/wp-content/uploads/2025/09/Vector-Smart-Object-0.png" width="150">
+</td></tr>
+
+<!-- MESSAGE -->
+<tr><td style="padding:30px; font-family:Arial;">
+  <h1 style="color:#003366;">Following Up on Your Offer</h1>
+  <p style="color:#444;">
+    Hi {{ client_name }},  
+    We recently shared an offer with you:  
+    <strong>{{ offer_title }}</strong><br><br>
+    We’d love to help you move forward or answer any questions you may have.
+  </p>
+</td></tr>
+
+<!-- CTA -->
+<tr><td align="center" style="padding:20px;">
+  <a href="{{ offer_link }}"
+     style="background:#0066cc; padding:14px 30px; color:#fff; text-decoration:none; border-radius:4px;">
+     Review the Offer
+  </a>
+</td></tr>
+
+<!-- FOOTER -->
+<tr><td style="padding:20px 30px 30px; font-size:12px; color:#888;">
+  You're receiving this follow-up because you interacted with an SEG Invest offer.<br>
+  <a href="%%unsubscribe_link%%">Unsubscribe</a>
+</td></tr>
+
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>
