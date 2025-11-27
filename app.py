@@ -22,8 +22,13 @@ def get_file_templates():
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = r'sqlite:///email_marketing.db'
-app.config['SECRET_KEY'] = 'warzone_secure_key_998877' # Changed to a more "secure" looking key
+# Database configuration
+database_url = os.environ.get('DATABASE_URL')
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or r'sqlite:///email_marketing.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'warzone_secure_key_998877' # Changed to a more "secure" looking key
 db.init_app(app)
 
 login_manager = LoginManager()
