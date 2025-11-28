@@ -7,9 +7,9 @@
 
 <!-- Tabs Navigation -->
 <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="settingsTabs" role="tablist">
+    <ul class="flex flex-wrap -mb-px text-lg font-bold text-center" id="settingsTabs" role="tablist">
         <li class="mr-2" role="presentation">
-            <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 transition-colors duration-200 text-indigo-600 border-indigo-600 dark:text-indigo-500 dark:border-indigo-500" id="servers-tab" data-tabs-target="#servers" type="button" role="tab" aria-controls="servers" aria-selected="true" onclick="switchTab('servers')" data-i18n="servers">
+            <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 transition-colors duration-200 text-red-600 border-red-600 dark:text-red-500 dark:border-red-500" id="servers-tab" data-tabs-target="#servers" type="button" role="tab" aria-controls="servers" aria-selected="true" onclick="switchTab('servers')" data-i18n="servers">
                 Servers
             </button>
         </li>
@@ -39,11 +39,17 @@
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border {{ 'border-green-500 ring-1 ring-green-500' if server.is_primary else 'border-gray-100 dark:border-gray-700' }}">
                 <div class="flex justify-between items-start mb-4">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ server.name }}</h3>
-                    {% if server.is_primary %}
-                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium" data-i18n="primary">Primary</span>
-                    {% else %}
-                    <a href="{{ url_for('set_primary_server', server_id=server.id) }}" class="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" data-i18n="make_primary">Make Primary</a>
-                    {% endif %}
+                    <div class="flex items-center gap-2">
+                        <span id="status-{{ server.id }}" class="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium" title="Connection Status">
+                            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                            <span class="status-text" data-i18n="checking">Checking...</span>
+                        </span>
+                        {% if server.is_primary %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium" data-i18n="primary">Primary</span>
+                        {% else %}
+                        <a href="{{ url_for('set_primary_server', server_id=server.id) }}" class="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" data-i18n="make_primary">Make Primary</a>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                     <p><span class="font-medium" data-i18n="email_address">Email:</span> {{ server.smtp_email }}</p>
@@ -74,51 +80,51 @@
 
         <!-- Add New Server -->
         <!-- Add New Server -->
-        <div class="bg-gray-800/80 backdrop-blur-md p-8 border border-gray-700 shadow-2xl max-w-2xl mx-auto rounded-xl relative overflow-hidden">
+        <div class="bg-white dark:bg-gray-800/80 backdrop-blur-md p-8 border border-gray-200 dark:border-gray-700 shadow-2xl max-w-2xl mx-auto rounded-xl relative overflow-hidden">
             <!-- Decorative corner markers -->
             <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
             <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
             <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-red-600"></div>
             <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
 
-            <h3 class="text-2xl font-display text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="add_new_server">Add New Server</h3>
+            <h3 class="text-2xl font-display text-gray-900 dark:text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="add_new_server">Add New Server</h3>
             <form action="{{ url_for('settings') }}" method="POST" class="space-y-6">
                 <div class="space-y-1">
-                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="name" data-i18n="server_name">Server Name (Friendly Name)</label>
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="name" data-i18n="server_name">Server Name (Friendly Name)</label>
                     <input type="text" name="name" id="name" placeholder="e.g. Marketing Gmail" required 
-                        class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
+                        class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                 </div>
                 
-                <h4 class="text-md font-display text-red-500 tracking-wider mb-3 mt-6 border-b border-gray-700 pb-2" data-i18n="smtp_config">SMTP Configuration (Sending)</h4>
+                <h4 class="text-md font-display text-red-600 dark:text-red-500 tracking-wider mb-3 mt-6 border-b border-gray-200 dark:border-gray-700 pb-2" data-i18n="smtp_config">SMTP Configuration (Sending)</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="space-y-1">
-                        <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="smtp_server" data-i18n="smtp_server">SMTP Server</label>
+                        <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="smtp_server" data-i18n="smtp_server">SMTP Server</label>
                         <input type="text" name="smtp_server" id="smtp_server" value="smtp.gmail.com" required 
-                            class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
+                            class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="smtp_port" data-i18n="port">Port</label>
+                        <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="smtp_port" data-i18n="port">Port</label>
                         <input type="number" name="smtp_port" id="smtp_port" value="587" required 
-                            class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
+                            class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                     </div>
                 </div>
                 <div class="space-y-1 mb-4">
-                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="smtp_email" data-i18n="email_address">Email Address</label>
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="smtp_email" data-i18n="email_address">Email Address</label>
                     <input type="email" name="smtp_email" id="smtp_email" required 
-                        class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
+                        class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                 </div>
                 <div class="space-y-1 mb-6">
-                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="smtp_password" data-i18n="app_password">App Password</label>
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="smtp_password" data-i18n="app_password">App Password</label>
                     <input type="password" name="smtp_password" id="smtp_password" required 
-                        class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
+                        class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                     <p class="text-xs text-gray-500 mt-1 font-mono" data-i18n="password_hint">Use an App Password for Gmail/Outlook, not your login password.</p>
                 </div>
 
-                <h4 class="text-md font-display text-red-500 tracking-wider mb-3 border-b border-gray-700 pb-2" data-i18n="imap_config">IMAP Configuration (Replies)</h4>
+                <h4 class="text-md font-display text-red-600 dark:text-red-500 tracking-wider mb-3 border-b border-gray-200 dark:border-gray-700 pb-2" data-i18n="imap_config">IMAP Configuration (Replies)</h4>
                 <div class="space-y-1 mb-6">
-                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="imap_server" data-i18n="imap_server">IMAP Server</label>
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="imap_server" data-i18n="imap_server">IMAP Server</label>
                     <input type="text" name="imap_server" id="imap_server" value="imap.gmail.com" required 
-                        class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
+                        class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                 </div>
 
                 <div class="flex justify-end">
@@ -130,31 +136,31 @@
 
     <!-- Security Tab -->
     <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50" id="security" role="tabpanel" aria-labelledby="security-tab">
-        <div class="bg-gray-800/80 backdrop-blur-md p-8 border border-gray-700 shadow-2xl max-w-md mx-auto rounded-xl relative overflow-hidden">
+        <div class="bg-white dark:bg-gray-800/80 backdrop-blur-md p-8 border border-gray-200 dark:border-gray-700 shadow-2xl max-w-md mx-auto rounded-xl relative overflow-hidden">
             <!-- Decorative corner markers -->
             <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
             <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
             <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-red-600"></div>
             <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
 
-            <h3 class="text-2xl font-display text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="change_password">Change Password</h3>
+            <h3 class="text-2xl font-display text-gray-900 dark:text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="change_password">Change Password</h3>
             
             <div id="passwordMessage" class="hidden mb-4 p-3 rounded text-sm font-mono border-l-4"></div>
             
             <form id="passwordForm" onsubmit="handlePasswordChange(event)" class="space-y-6">
                 <!-- Current Password -->
                 <div class="space-y-1">
-                    <label for="old_password" class="block text-xs font-mono text-gray-400 uppercase tracking-wider" data-i18n="current_password">Current Password</label>
+                    <label for="old_password" class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" data-i18n="current_password">Current Password</label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-500 group-focus-within:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-red-600 dark:group-focus-within:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
                         <input id="old_password" name="old_password" type="password" required 
-                            class="block w-full pl-10 pr-10 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" 
+                            class="block w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" 
                             placeholder="********">
-                        <button type="button" onclick="togglePassword('old_password', 'eye-old')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-red-500 focus:outline-none">
+                        <button type="button" onclick="togglePassword('old_password', 'eye-old')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-500 focus:outline-none">
                             <svg id="eye-old" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -165,17 +171,17 @@
 
                 <!-- New Password -->
                 <div class="space-y-1">
-                    <label for="new_password" class="block text-xs font-mono text-gray-400 uppercase tracking-wider" data-i18n="new_password">New Password</label>
+                    <label for="new_password" class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" data-i18n="new_password">New Password</label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-500 group-focus-within:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-red-600 dark:group-focus-within:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
                         <input id="new_password" name="new_password" type="password" required 
-                            class="block w-full pl-10 pr-10 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" 
+                            class="block w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" 
                             placeholder="********">
-                        <button type="button" onclick="togglePassword('new_password', 'eye-new')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-red-500 focus:outline-none">
+                        <button type="button" onclick="togglePassword('new_password', 'eye-new')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-500 focus:outline-none">
                             <svg id="eye-new" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -186,17 +192,17 @@
 
                 <!-- Confirm Password -->
                 <div class="space-y-1">
-                    <label for="confirm_password" class="block text-xs font-mono text-gray-400 uppercase tracking-wider" data-i18n="confirm_new_password">Confirm New Password</label>
+                    <label for="confirm_password" class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" data-i18n="confirm_new_password">Confirm New Password</label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-500 group-focus-within:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-red-600 dark:group-focus-within:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
                         <input id="confirm_password" name="confirm_password" type="password" required 
-                            class="block w-full pl-10 pr-10 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" 
+                            class="block w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" 
                             placeholder="********">
-                        <button type="button" onclick="togglePassword('confirm_password', 'eye-confirm')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-red-500 focus:outline-none">
+                        <button type="button" onclick="togglePassword('confirm_password', 'eye-confirm')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-500 focus:outline-none">
                             <svg id="eye-confirm" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -215,37 +221,37 @@
 
     <!-- Database Tab -->
     <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50" id="database" role="tabpanel" aria-labelledby="database-tab">
-        <div class="bg-gray-800/80 backdrop-blur-md p-8 border border-gray-700 shadow-2xl max-w-2xl mx-auto rounded-xl relative overflow-hidden">
+        <div class="bg-white dark:bg-gray-800/80 backdrop-blur-md p-8 border border-gray-200 dark:border-gray-700 shadow-2xl max-w-2xl mx-auto rounded-xl relative overflow-hidden">
             <!-- Decorative corner markers -->
             <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
             <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
             <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-red-600"></div>
             <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
 
-            <h3 class="text-2xl font-display text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="database_management">Database Management</h3>
+            <h3 class="text-2xl font-display text-gray-900 dark:text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="database_management">Database Management</h3>
             
-            <div class="bg-red-900/20 p-4 border border-red-800/50 mb-6 flex items-start">
-                <svg class="w-6 h-6 text-red-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <p class="text-sm text-red-200 font-mono">
+            <div class="bg-red-100 dark:bg-red-900/20 p-4 border border-red-200 dark:border-red-800/50 mb-6 flex items-start">
+                <svg class="w-6 h-6 text-red-600 dark:text-red-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <p class="text-sm text-red-800 dark:text-red-200 font-mono">
                     <span class="font-bold block mb-1 uppercase tracking-wider" data-i18n="overwrite_database_warning">Warning: Uploading a database file will replace the current database. All existing data on this server will be overwritten.</span>
                 </p>
             </div>
             <form id="uploadDbForm" action="{{ url_for('upload_db') }}" method="POST" enctype="multipart/form-data">
                 <div class="mb-6">
-                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider mb-2" for="db_file" data-i18n="upload_db_file">Upload Database File (.db)</label>
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2" for="db_file" data-i18n="upload_db_file">Upload Database File (.db)</label>
                     <div class="flex items-center justify-center w-full">
-                        <label for="db_file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed cursor-pointer bg-gray-900 hover:bg-gray-800 hover:border-red-500 transition-all group">
+                        <label for="db_file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-700 border-dashed cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-red-600 dark:hover:border-red-500 transition-all group">
                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 mb-4 text-gray-500 group-hover:text-red-500 transition-colors" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <svg class="w-8 h-8 mb-4 text-gray-400 dark:text-gray-500 group-hover:text-red-600 dark:group-hover:text-red-500 transition-colors" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                                 </svg>
-                                <p class="mb-2 text-sm text-gray-400 group-hover:text-white font-mono"><span class="font-bold" data-i18n="click_to_upload">Click to upload</span> <span data-i18n="or_drag_and_drop">or drag and drop</span></p>
-                                <p class="text-xs text-gray-600 font-mono">SQLite DB file (.db, .sqlite)</p>
+                                <p class="mb-2 text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white font-mono"><span class="font-bold" data-i18n="click_to_upload">Click to upload</span> <span data-i18n="or_drag_and_drop">or drag and drop</span></p>
+                                <p class="text-xs text-gray-500 dark:text-gray-600 font-mono">SQLite DB file (.db, .sqlite)</p>
                             </div>
                             <input id="db_file" name="file" type="file" class="hidden" accept=".db,.sqlite" required />
                         </label>
                     </div> 
-                    <div id="file-name-display" class="mt-2 text-sm text-red-400 font-mono text-center hidden"></div>
+                    <div id="file-name-display" class="mt-2 text-sm text-red-600 dark:text-red-400 font-mono text-center hidden"></div>
                 </div>
                 <div class="flex justify-end">
                     <button type="button" onclick="openDbConfirmModal()" class="w-full md:w-auto px-8 py-3 bg-red-600 text-white font-bold uppercase tracking-widest hover:bg-red-700 transition-all transform hover:scale-[1.02] shadow-[0_0_15px_rgba(220,38,38,0.5)] flex items-center justify-center">
@@ -259,8 +265,8 @@
 </div>
 
 <!-- Edit Server Modal -->
-<div id="editServerModal" class="fixed inset-0 bg-black/80 hidden overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-sm">
-    <div class="relative p-8 border border-gray-700 w-full max-w-2xl shadow-2xl rounded-xl bg-gray-800 transform transition-all overflow-hidden">
+<div id="editServerModal" class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 hidden overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="relative p-6 border border-gray-200 dark:border-gray-700 w-full max-w-2xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 transform transition-all overflow-hidden max-h-[90vh] overflow-y-auto">
         <!-- Decorative corner markers -->
         <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
         <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
@@ -268,42 +274,42 @@
         <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
 
         <div class="mt-3">
-            <h3 class="text-2xl font-display text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="edit_template">Edit Server</h3>
+            <h3 class="text-2xl font-display text-gray-900 dark:text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="edit_template">Edit Server</h3>
             <form id="editServerForm" method="POST" class="space-y-6">
                 <div class="space-y-1">
-                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="edit_server_name" data-i18n="server_name">Server Name</label>
-                    <input type="text" name="name" id="edit_server_name" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="edit_server_name" data-i18n="server_name">Server Name</label>
+                    <input type="text" name="name" id="edit_server_name" class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
                 </div>
                 
-                <h4 class="text-md font-display text-red-500 tracking-wider mb-3 mt-6 border-b border-gray-700 pb-2" data-i18n="smtp_config">SMTP Configuration (Sending)</h4>
+                <h4 class="text-md font-display text-red-600 dark:text-red-500 tracking-wider mb-3 mt-6 border-b border-gray-200 dark:border-gray-700 pb-2" data-i18n="smtp_config">SMTP Configuration (Sending)</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="space-y-1">
-                        <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="edit_smtp_server" data-i18n="smtp_server">SMTP Server</label>
-                        <input type="text" name="smtp_server" id="edit_smtp_server" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
+                        <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="edit_smtp_server" data-i18n="smtp_server">SMTP Server</label>
+                        <input type="text" name="smtp_server" id="edit_smtp_server" class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="edit_smtp_port" data-i18n="port">Port</label>
-                        <input type="number" name="smtp_port" id="edit_smtp_port" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
+                        <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="edit_smtp_port" data-i18n="port">Port</label>
+                        <input type="number" name="smtp_port" id="edit_smtp_port" class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
                     </div>
                 </div>
                 <div class="space-y-1 mb-4">
-                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="edit_smtp_email" data-i18n="email_address">Email Address</label>
-                    <input type="email" name="smtp_email" id="edit_smtp_email" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="edit_smtp_email" data-i18n="email_address">Email Address</label>
+                    <input type="email" name="smtp_email" id="edit_smtp_email" class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
                 </div>
                 <div class="space-y-1 mb-6">
-                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="edit_smtp_password" data-i18n="app_password">App Password</label>
-                    <input type="password" name="smtp_password" id="edit_smtp_password" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" placeholder="Leave blank to keep unchanged">
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="edit_smtp_password" data-i18n="app_password">App Password</label>
+                    <input type="password" name="smtp_password" id="edit_smtp_password" class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" placeholder="Leave blank to keep unchanged">
                     <p class="text-xs text-gray-500 mt-1 font-mono" data-i18n="password_change_hint">Only enter if you want to change it.</p>
                 </div>
 
-                <h4 class="text-md font-display text-red-500 tracking-wider mb-3 border-b border-gray-700 pb-2" data-i18n="imap_config">IMAP Configuration (Replies)</h4>
+                <h4 class="text-md font-display text-red-600 dark:text-red-500 tracking-wider mb-3 border-b border-gray-200 dark:border-gray-700 pb-2" data-i18n="imap_config">IMAP Configuration (Replies)</h4>
                 <div class="space-y-1 mb-6">
-                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="edit_imap_server" data-i18n="imap_server">IMAP Server</label>
-                    <input type="text" name="imap_server" id="edit_imap_server" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" for="edit_imap_server" data-i18n="imap_server">IMAP Server</label>
+                    <input type="text" name="imap_server" id="edit_imap_server" class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
                 </div>
 
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="document.getElementById('editServerModal').classList.add('hidden')" class="px-6 py-3 bg-gray-700 text-gray-300 font-bold uppercase tracking-wider hover:bg-gray-600 transition-colors rounded-none" data-i18n="cancel">Cancel</button>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onclick="document.getElementById('editServerModal').classList.add('hidden')" class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-bold uppercase tracking-wider hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors rounded-none" data-i18n="cancel">Cancel</button>
                     <button type="submit" class="px-6 py-3 bg-red-600 text-white font-bold uppercase tracking-widest hover:bg-red-700 transition-all transform hover:scale-[1.02] shadow-[0_0_15px_rgba(220,38,38,0.5)] rounded-none" data-i18n="save_changes">Save Changes</button>
                 </div>
             </form>
@@ -312,8 +318,8 @@
 </div>
 
 <!-- Database Confirmation Modal -->
-<div id="dbConfirmModal" class="fixed inset-0 bg-black/90 hidden overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-md">
-    <div class="relative p-8 border border-red-600 w-full max-w-md shadow-[0_0_30px_rgba(220,38,38,0.3)] rounded-xl bg-gray-900 transform transition-all overflow-hidden">
+<div id="dbConfirmModal" class="fixed inset-0 bg-gray-900/50 dark:bg-black/90 hidden overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-md">
+    <div class="relative p-6 border border-red-600 w-full max-w-md shadow-[0_0_30px_rgba(220,38,38,0.3)] rounded-xl bg-white dark:bg-gray-900 transform transition-all overflow-hidden max-h-[90vh] overflow-y-auto">
         <!-- Decorative corner markers -->
         <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
         <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
@@ -321,21 +327,21 @@
         <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
 
         <div class="text-center">
-            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-900/30 mb-4 border border-red-600/50">
-                <svg class="h-10 w-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 mb-4 border border-red-600/50">
+                <svg class="h-10 w-10 text-red-600 dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
-            <h3 class="text-2xl font-display text-white tracking-widest uppercase mb-2 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]">Overwrite Database?</h3>
-            <p class="text-sm text-gray-400 mb-6 font-mono">
-                This will <span class="font-bold text-red-500">PERMANENTLY DELETE</span> all current data on this server and replace it with the uploaded file. This action cannot be undone.
+            <h3 class="text-2xl font-display text-gray-900 dark:text-white tracking-widest uppercase mb-2 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]">Overwrite Database?</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6 font-mono">
+                This will <span class="font-bold text-red-600 dark:text-red-500">PERMANENTLY DELETE</span> all current data on this server and replace it with the uploaded file. This action cannot be undone.
             </p>
             
             <div class="mb-8 text-left">
-                <label class="block text-gray-400 text-xs font-mono uppercase tracking-wider mb-2" for="confirm_word">Type <span class="font-bold text-red-500 bg-red-900/20 px-1 rounded">CONFIRM</span> to continue:</label>
-                <input type="text" id="confirm_word" class="block w-full px-4 py-3 bg-gray-950 border border-red-900 text-white placeholder-gray-700 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none text-center tracking-widest" placeholder="CONFIRM" onkeyup="checkConfirmWord()">
+                <label class="block text-gray-600 dark:text-gray-400 text-xs font-mono uppercase tracking-wider mb-2" for="confirm_word">Type <span class="font-bold text-red-600 dark:text-red-500 bg-red-100 dark:bg-red-900/20 px-1 rounded">CONFIRM</span> to continue:</label>
+                <input type="text" id="confirm_word" class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-950 border border-red-300 dark:border-red-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-700 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none text-center tracking-widest" placeholder="CONFIRM" onkeyup="checkConfirmWord()">
             </div>
 
             <div class="flex justify-center space-x-4">
-                <button type="button" onclick="closeDbConfirmModal()" class="px-6 py-3 bg-gray-800 text-gray-300 font-bold uppercase tracking-wider hover:bg-gray-700 transition-colors rounded-none">Cancel</button>
+                <button type="button" onclick="closeDbConfirmModal()" class="px-6 py-3 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-300 font-bold uppercase tracking-wider hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors rounded-none">Cancel</button>
                 <button type="button" id="confirmDbBtn" onclick="submitDbForm()" disabled class="px-6 py-3 bg-red-600 text-white font-bold uppercase tracking-widest hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_15px_rgba(220,38,38,0.5)] rounded-none">Yes, Overwrite</button>
             </div>
         </div>
@@ -352,14 +358,14 @@
         // Update tab buttons
         document.querySelectorAll('[role="tab"]').forEach(el => {
             el.setAttribute('aria-selected', 'false');
-            el.classList.remove('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-500', 'dark:border-indigo-500');
+            el.classList.remove('text-red-600', 'border-red-600', 'dark:text-red-500', 'dark:border-red-500');
             el.classList.add('border-transparent');
         });
         
         const activeTab = document.getElementById(tabId + '-tab');
         activeTab.setAttribute('aria-selected', 'true');
         activeTab.classList.remove('border-transparent');
-        activeTab.classList.add('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-500', 'dark:border-indigo-500');
+        activeTab.classList.add('text-red-600', 'border-red-600', 'dark:text-red-500', 'dark:border-red-500');
     }
 
     function openEditServerModal(id, name, smtp_server, smtp_port, smtp_email, imap_server) {
@@ -456,17 +462,53 @@
         
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
-            // Switch to eye-off icon (simple implementation: just change color or path, but here we can just toggle opacity or class if we had two icons. 
-            // Since we reused the single SVG structure from login but didn't copy the hidden eye-off icon fully in the HTML above (to keep it simple), 
-            // let's just change the color to indicate visibility or swap the path if we want to be perfect.
-            // For simplicity and consistency with the login page copy-paste, let's assume we want to toggle the path or class.
-            // Actually, let's just toggle the text color of the icon to red to indicate "exposed"
             iconSvg.classList.add('text-red-500');
             iconSvg.classList.remove('text-gray-500');
         } else {
             passwordInput.type = 'password';
             iconSvg.classList.remove('text-red-500');
             iconSvg.classList.add('text-gray-500');
+        }
+    }
+
+    // Check server status on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const servers = document.querySelectorAll('[id^="status-"]');
+        servers.forEach(server => {
+            const serverId = server.id.split('-')[1];
+            checkServerStatus(serverId);
+        });
+    });
+
+    async function checkServerStatus(serverId) {
+        const statusEl = document.getElementById(`status-${serverId}`);
+        const dotEl = statusEl.querySelector('span:first-child');
+        const textEl = statusEl.querySelector('.status-text');
+
+        try {
+            const response = await fetch(`/settings/server/${serverId}/check_status`);
+            const data = await response.json();
+
+            if (data.success) {
+                statusEl.classList.remove('bg-gray-100', 'text-gray-600');
+                statusEl.classList.add('bg-green-100', 'text-green-800');
+                dotEl.classList.remove('bg-gray-400');
+                dotEl.classList.add('bg-green-500');
+                textEl.textContent = 'Online';
+            } else {
+                statusEl.classList.remove('bg-gray-100', 'text-gray-600');
+                statusEl.classList.add('bg-red-100', 'text-red-800');
+                dotEl.classList.remove('bg-gray-400');
+                dotEl.classList.add('bg-red-500');
+                textEl.textContent = 'Offline';
+                statusEl.title = data.message; // Show error on hover
+            }
+        } catch (error) {
+            statusEl.classList.remove('bg-gray-100', 'text-gray-600');
+            statusEl.classList.add('bg-red-100', 'text-red-800');
+            dotEl.classList.remove('bg-gray-400');
+            dotEl.classList.add('bg-red-500');
+            textEl.textContent = 'Error';
         }
     }
 </script>

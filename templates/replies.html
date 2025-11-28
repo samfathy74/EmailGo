@@ -6,13 +6,18 @@
 
 {% block content %}
 <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-    <h2 class="text-3xl font-bold text-gray-800 dark:text-white" data-i18n="page_replies">Replies</h2>
-    <form action="{{ url_for('check_replies_manual') }}" method="POST" class="w-full md:w-auto inline" onsubmit="startCheckReplies()">
-        <button type="submit" class="w-full md:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium" data-i18n="check_replies">
+    <h2 class="text-3xl font-display text-gray-800 dark:text-white" data-i18n="page_replies">Replies</h2>
+    <form action="{{ url_for('check_replies_manual') }}" method="POST" class="w-full md:w-auto flex items-center gap-2" onsubmit="startCheckReplies(event)">
+        <div class="relative">
+            <input type="number" id="scan_limit" name="limit" value="200" min="1" max="1000" class="w-24 px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600" title="Max emails to scan" placeholder="Limit">
+            <span class="absolute right-8 top-2 text-xs text-gray-400 pointer-events-none">Max</span>
+        </div>
+        <button type="submit" class="w-full md:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium whitespace-nowrap" data-i18n="check_replies">
             Check for New Replies
         </button>
     </form>
 </div>
+<div id="check-status" class="hidden mb-6"></div>
 
 <div class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
     <p class="text-sm text-blue-800 dark:text-blue-300" data-i18n="view_replies">View replies from your campaigns.</p>
@@ -133,12 +138,18 @@
 </div>
 
 <!-- View Reply Modal -->
-<div id="replyModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+<div id="replyModal" class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 hidden overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="relative p-6 border border-gray-200 dark:border-gray-700 w-full max-w-2xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 transform transition-all overflow-hidden max-h-[90vh] overflow-y-auto">
+        <!-- Decorative corner markers -->
+        <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
+        <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
+        <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-red-600"></div>
+        <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
+
         <div class="mt-3">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" data-i18n="reply_details">Reply Details</h3>
-                <button onclick="document.getElementById('replyModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-500">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="text-2xl font-display text-gray-900 dark:text-white tracking-widest uppercase drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="reply_details">Reply Details</h3>
+                <button onclick="document.getElementById('replyModal').classList.add('hidden')" class="text-gray-400 hover:text-red-600 transition-colors">
                     <span class="sr-only">Close</span>
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -146,64 +157,73 @@
                 </button>
             </div>
             
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
-                <div class="grid grid-cols-1 gap-2 text-sm">
-                    <div class="flex">
-                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="from">From:</span>
-                        <span id="modal-sender" class="text-gray-900 dark:text-white"></span>
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6 border border-gray-100 dark:border-gray-600">
+                <div class="grid grid-cols-1 gap-3 text-sm">
+                    <div class="flex items-center">
+                        <span class="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24" data-i18n="from">From:</span>
+                        <span id="modal-sender" class="text-gray-900 dark:text-white font-medium"></span>
                     </div>
-                    <div class="flex">
-                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="subject">Subject:</span>
-                        <span id="modal-subject" class="text-gray-900 dark:text-white"></span>
+                    <div class="flex items-center">
+                        <span class="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24" data-i18n="subject">Subject:</span>
+                        <span id="modal-subject" class="text-gray-900 dark:text-white font-medium"></span>
                     </div>
-                    <div class="flex">
-                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="date">Date:</span>
-                        <span id="modal-date" class="text-gray-900 dark:text-white"></span>
+                    <div class="flex items-center">
+                        <span class="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24" data-i18n="date">Date:</span>
+                        <span id="modal-date" class="text-gray-900 dark:text-white font-mono"></span>
                     </div>
-                    <div class="flex" id="modal-cc-container">
-                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="cc">CC:</span>
+                    <div class="flex items-center" id="modal-cc-container">
+                        <span class="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24" data-i18n="cc">CC:</span>
                         <span id="modal-cc" class="text-gray-900 dark:text-white"></span>
                     </div>
-                    <div class="flex" id="modal-attachments-container">
-                        <span class="font-semibold text-gray-500 dark:text-gray-300 w-20" data-i18n="attach">Attach:</span>
-                        <span class="text-gray-900 dark:text-white">Yes</span>
+                    <div class="flex items-center" id="modal-attachments-container">
+                        <span class="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24" data-i18n="attach">Attach:</span>
+                        <span class="text-red-600 dark:text-red-400 font-bold flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                            Yes
+                        </span>
                     </div>
                 </div>
             </div>
 
-            <div class="prose dark:prose-invert max-w-none">
-                <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg p-4 min-h-[200px] whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200" id="modal-content"></div>
+            <div class="prose dark:prose-invert max-w-none mb-6">
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-none p-4 min-h-[200px] whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-mono" id="modal-content"></div>
             </div>
 
-            <div class="mt-6 flex justify-end">
-                <button type="button" onclick="document.getElementById('replyModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500" data-i18n="cancel">Close</button>
+            <div class="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="document.getElementById('replyModal').classList.add('hidden')" class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold uppercase tracking-wider hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors rounded-none" data-i18n="cancel">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Follow Up Modal -->
-<div id="followUpModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white dark:bg-gray-800">
+<div id="followUpModal" class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 hidden overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="relative p-6 border border-gray-200 dark:border-gray-700 w-full max-w-lg shadow-2xl rounded-xl bg-white dark:bg-gray-800 transform transition-all overflow-hidden max-h-[90vh] overflow-y-auto">
+        <!-- Decorative corner markers -->
+        <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
+        <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
+        <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-red-600"></div>
+        <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
+
         <div class="mt-3">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" data-i18n="follow_up">Send Follow Up</h3>
-            <form id="followUpForm" method="POST" action="" onsubmit="showLoading('Sending Follow Up...');">
+            <h3 class="text-2xl font-display text-gray-900 dark:text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="follow_up">Send Follow Up</h3>
+            <form id="followUpForm" method="POST" action="" onsubmit="showLoading('Sending Follow Up...');" class="space-y-6">
                 <input type="hidden" id="followup-reply-id" name="reply_id">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="to">To</label>
-                    <input type="text" id="followup-to" readonly class="w-full border rounded-md px-3 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">
+                <div class="space-y-1">
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" data-i18n="to">To</label>
+                    <input type="text" id="followup-to" readonly class="block w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-300 font-mono rounded-none cursor-not-allowed">
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="subject">Subject</label>
-                    <input type="text" name="subject" required class="w-full border rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white" placeholder="Re: ...">
+                <div class="space-y-1">
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" data-i18n="subject">Subject</label>
+                    <input type="text" name="subject" required class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" placeholder="Re: ...">
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="message">Message</label>
-                    <textarea name="content" rows="5" required class="w-full border rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white"></textarea>
+                <div class="space-y-1">
+                    <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider" data-i18n="message">Message</label>
+                    <textarea name="content" rows="5" required class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none"></textarea>
                 </div>
-                <div class="flex justify-end gap-2">
-                    <button type="button" onclick="document.getElementById('followUpModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500" data-i18n="cancel">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" data-i18n="send">Send</button>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onclick="document.getElementById('followUpModal').classList.add('hidden')" class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-bold uppercase tracking-wider hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors rounded-none" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-bold uppercase tracking-widest hover:bg-blue-700 transition-all transform hover:scale-[1.02] shadow-[0_0_15px_rgba(37,99,235,0.5)] rounded-none" data-i18n="send">Send</button>
                 </div>
             </form>
         </div>
@@ -211,19 +231,30 @@
 </div>
 
 <!-- Loading Modal -->
-<div id="loadingModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl flex flex-col items-center">
-        <svg class="animate-spin h-10 w-10 text-indigo-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white" id="loadingText" data-i18n="checking_replies">Checking for new replies...</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">This may take a few moments.</p>
+<div id="loadingModal" class="fixed inset-0 bg-gray-900/80 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl flex flex-col items-center border border-gray-200 dark:border-gray-700 relative overflow-hidden">
+        <!-- Decorative corner markers -->
+        <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
+        <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
+        <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-red-600"></div>
+        <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
+
+        <div class="relative">
+            <div class="absolute inset-0 bg-red-500 blur-xl opacity-20 animate-pulse"></div>
+            <svg class="animate-spin h-12 w-12 text-red-600 dark:text-red-500 mb-4 relative z-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+        <h3 class="text-xl font-display text-gray-900 dark:text-white tracking-widest uppercase" id="loadingText" data-i18n="checking_replies">Checking for new replies...</h3>
+        <p class="text-sm font-mono text-gray-500 dark:text-gray-400 mt-2">This may take a few moments.</p>
     </div>
 </div>
 
 <script>
-    function startCheckReplies() {
+    function startCheckReplies(event) {
+        event.preventDefault(); // Prevent default form submission
+        
         const modal = document.getElementById('loadingModal');
         const text = document.getElementById('loadingText');
         modal.classList.remove('hidden');
@@ -247,7 +278,56 @@
             } else {
                 clearInterval(interval);
             }
-        }, 2500); // Change message every 2.5 seconds
+        }, 2500);
+
+        // Get filter values
+        const startDate = document.querySelector('input[name="start_date"]').value;
+        const limit = document.getElementById('scan_limit').value;
+
+        // Perform AJAX request
+        fetch("{{ url_for('check_replies_manual') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                start_date: startDate,
+                limit: limit
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            clearInterval(interval);
+            modal.classList.add('hidden');
+            
+            const statusLabel = document.getElementById('check-status');
+            statusLabel.textContent = data.message;
+            statusLabel.classList.remove('hidden');
+            
+            if (data.success) {
+                statusLabel.className = 'mt-4 p-4 rounded-lg bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800 text-sm font-medium';
+                
+                if (data.new_count > 0) {
+                    // Reload the table content
+                    setTimeout(() => {
+                        location.reload(); 
+                    }, 2000); // Wait a bit so user can read the message
+                }
+            } else {
+                statusLabel.className = 'mt-4 p-4 rounded-lg bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800 text-sm font-medium';
+            }
+        })
+        .catch(error => {
+            clearInterval(interval);
+            modal.classList.add('hidden');
+            console.error('Error:', error);
+            
+            const statusLabel = document.getElementById('check-status');
+            statusLabel.textContent = 'An error occurred while checking for replies.';
+            statusLabel.className = 'mt-4 p-4 rounded-lg bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800 text-sm font-medium';
+            statusLabel.classList.remove('hidden');
+        });
     }
 
     function openReplyModal(button) {

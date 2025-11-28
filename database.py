@@ -44,6 +44,7 @@ class Campaign(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     template = db.relationship('Template', backref=db.backref('campaigns', lazy=True))
     target_group = db.relationship('ContactGroup', backref=db.backref('campaigns', lazy=True))
+    error_message = db.Column(db.Text, nullable=True)
 
 class EmailLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)

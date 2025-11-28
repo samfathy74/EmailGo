@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from database import db, Contact, Template, Campaign, EmailLog, Reply, Settings, Server, ContactGroup, User
+from sqlalchemy import text
 from email_utils import send_email, check_replies
 import os
 import json
@@ -45,6 +46,14 @@ with app.app_context():
         db.session.add(admin)
         db.session.commit()
         print("Default admin user created: admin / adminpassword")
+    
+    # Migration for error_message column
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE campaign ADD COLUMN error_message TEXT"))
+            conn.commit()
+    except Exception:
+        pass # Column likely exists
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -123,11 +132,17 @@ def dashboard():
     # Follow-ups sent
     followup_count = EmailLog.query.filter_by(status='sent', type='followup').count()
 
+    # Failed and Draft Campaigns
+    failed_campaign_count = Campaign.query.filter_by(status='failed').count()
+    draft_campaign_count = Campaign.query.filter_by(status='draft').count()
+
     return render_template('dashboard.html', 
                            contact_count=contact_count, 
                            campaign_count=campaign_count, 
                            reply_count=reply_count,
                            followup_count=followup_count,
+                           failed_campaign_count=failed_campaign_count,
+                           draft_campaign_count=draft_campaign_count,
                            total_sent=total_sent,
                            success_rate=success_rate,
                            sent_today=sent_today,
@@ -169,8 +184,19 @@ def replies():
 @app.route('/check_replies_manual', methods=['POST'])
 @login_required
 def check_replies_manual():
+    # Handle both JSON and form data
+    if request.is_json:
+        data = request.get_json()
+        start_date_str = data.get('start_date')
+        limit = data.get('limit', 200)
+    else:
+        start_date_str = request.form.get('start_date')
+        limit = request.form.get('limit', 200)
+
     server = Server.query.filter_by(is_primary=True).first()
     if not server:
+        if request.is_json:
+            return jsonify({'success': False, 'message': 'No primary server configured.'})
         flash('No primary server configured.', 'error')
         return redirect(url_for('replies'))
 
@@ -181,9 +207,24 @@ def check_replies_manual():
     }
     campaigns = Campaign.query.all()
     
+    # Parse start date
+    start_date = None
+    if start_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        except ValueError:
+            pass
+            
+    # Default to 1st of current month if not provided
+    if not start_date:
+        today = datetime.now()
+        start_date = today.replace(day=1)
+
     try:
-        new_replies, error = check_replies(imap_config, campaigns)
+        new_replies, scanned_count, error = check_replies(imap_config, campaigns, start_date, limit)
         if error:
+            if request.is_json:
+                return jsonify({'success': False, 'message': f"Error checking replies: {error}"})
             flash(f"Error checking replies: {error}", 'error')
         else:
             count = 0
@@ -203,8 +244,19 @@ def check_replies_manual():
                         db.session.add(reply)
                         count += 1
                 db.session.commit()
-            flash(f'Checked for replies. Found {count} new replies.', 'success')
+            
+            msg = f'Checked {scanned_count} emails since {start_date.strftime("%Y-%m-%d")}. Found {count} new replies.'
+            if request.is_json:
+                # Return HTML for table rows to update frontend easily
+                # Re-query replies to include new ones and apply filters if needed
+                # For simplicity, just returning success and letting frontend reload or we could return data
+                # Better: Return the new rows rendered
+                return jsonify({'success': True, 'message': msg, 'new_count': count})
+            
+            flash(msg, 'success')
     except Exception as e:
+        if request.is_json:
+            return jsonify({'success': False, 'message': f"Error: {str(e)}"})
         flash(f"Error checking replies: {str(e)}", 'error')
 
     return redirect(url_for('replies'))
@@ -481,7 +533,7 @@ def campaigns():
             db.session.add(new_template)
             db.session.commit()
             template_id = new_template.id
-        else:
+        elif template_mode == 'file':
             file_template = request.form.get('file_template')
             if file_template:
                 try:
@@ -494,8 +546,8 @@ def campaigns():
                 except Exception as e:
                     flash(f'Error reading template file: {str(e)}', 'error')
                     return redirect(url_for('campaigns'))
-            else:
-                template_id = request.form.get('template_id')
+        else:
+            template_id = request.form.get('template_id')
         
         # Calculate contacts count based on group
         if target_group_id:
@@ -564,6 +616,7 @@ def send_campaign_emails(campaign_id):
         server = Server.query.filter_by(is_primary=True).first()
         if not server:
             campaign.status = 'failed'
+            campaign.error_message = "No primary server configured. Please go to Settings and configure a server."
             db.session.commit()
             print("No primary server configured.")
             return
@@ -571,6 +624,7 @@ def send_campaign_emails(campaign_id):
         template = db.session.get(Template, campaign.template_id)
         if not template:
             campaign.status = 'failed'
+            campaign.error_message = "Campaign template not found. It may have been deleted."
             db.session.commit()
             return
         
@@ -599,6 +653,7 @@ def send_campaign_emails(campaign_id):
         
         sent_count = 0
         failed_count = 0
+        last_error = None
         
         try:
             for contact in contacts:
@@ -618,17 +673,25 @@ def send_campaign_emails(campaign_id):
                     sent_count += 1
                 else:
                     failed_count += 1
+                    last_error = error
                 
                 # Commit progress after every email for real-time updates
                 campaign.sent_count = sent_count
                 db.session.commit()
             
             campaign.sent_count = sent_count
-            campaign.status = 'completed' if sent_count > 0 or total_contacts == 0 else 'failed'
+            
+            if sent_count == 0 and total_contacts > 0:
+                campaign.status = 'failed'
+                campaign.error_message = f"All emails failed. Last error: {last_error}"
+            else:
+                campaign.status = 'completed' if sent_count > 0 or total_contacts == 0 else 'failed'
+                
             db.session.commit()
             
         except Exception as e:
             campaign.status = 'failed'
+            campaign.error_message = str(e)
             db.session.commit()
             print(f"Error sending campaign {campaign_id}: {str(e)}")
 
@@ -832,8 +895,23 @@ def edit_campaign(campaign_id):
         return redirect(url_for('campaigns'))
     
     campaign.name = request.form.get('name')
-    # If we want to allow changing template, we'd need more logic, but for now just name is fine or maybe template_id
-    # Let's assume just name for now to keep it simple, or we can add template switching later if requested.
+    
+    # Update Target Group
+    target_group_id = request.form.get('target_group_id')
+    campaign.target_group_id = int(target_group_id) if target_group_id else None
+    
+    # Update Template
+    template_id = request.form.get('template_id')
+    if template_id:
+        campaign.template_id = int(template_id)
+        
+    # Recalculate total contacts
+    if campaign.target_group_id:
+        group = db.session.get(ContactGroup, campaign.target_group_id)
+        campaign.total_contacts = len(group.contacts) if group else 0
+    else:
+        campaign.total_contacts = Contact.query.filter_by(status='active').count()
+        
     db.session.commit()
     flash('Campaign updated successfully.', 'success')
     return redirect(url_for('campaigns'))
@@ -870,6 +948,31 @@ def edit_server(server_id):
     flash('Server updated successfully.', 'success')
     return redirect(url_for('settings'))
 
+@app.route('/settings/server/<int:server_id>/check_status')
+@login_required
+def check_server_status(server_id):
+    server = Server.query.get_or_404(server_id)
+    
+    # Check SMTP
+    try:
+        import smtplib
+        smtp = smtplib.SMTP(server.smtp_server, server.smtp_port, timeout=5)
+        smtp.starttls()
+        smtp.login(server.smtp_email, server.smtp_password)
+        smtp.quit()
+        
+        # Check IMAP (optional, but good for completeness)
+        import imaplib
+        imap = imaplib.IMAP4_SSL(server.imap_server, timeout=5)
+        imap.login(server.smtp_email, server.smtp_password)
+        imap.logout()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
+
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
