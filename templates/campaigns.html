@@ -18,20 +18,26 @@
 
 <!-- Create Modal -->
 <!-- Create Modal -->
-<div id="createModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+<div id="createModal" class="fixed inset-0 bg-black/80 hidden overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="relative p-6 border border-gray-700 w-full max-w-2xl shadow-2xl rounded-xl bg-gray-800 transform transition-all overflow-hidden max-h-[90vh] overflow-y-auto">
+        <!-- Decorative corner markers -->
+        <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
+        <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
+        <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-red-600"></div>
+        <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
+
         <div class="mt-3">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" data-i18n="create_new_campaign">Create New Campaign</h3>
-            <form action="{{ url_for('campaigns') }}" method="POST">
-                <div class="mb-4">
-                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="name" data-i18n="campaign_name">Campaign Name</label>
-                    <input type="text" name="name" id="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+            <h3 class="text-2xl font-display text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="create_new_campaign">Create New Campaign</h3>
+            <form action="{{ url_for('campaigns') }}" method="POST" class="space-y-6">
+                <div class="space-y-1">
+                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="name" data-i18n="campaign_name">Campaign Name</label>
+                    <input type="text" name="name" id="name" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
                 </div>
 
                 <!-- Target Audience -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="target_group_id" data-i18n="target_audience">Target Audience</label>
-                    <select name="target_group_id" id="target_group_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <div class="space-y-1">
+                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="target_group_id" data-i18n="target_audience">Target Audience</label>
+                    <select name="target_group_id" id="target_group_id" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                         <option value="" data-i18n="all_contacts">All Contacts</option>
                         {% for group in groups %}
                         <option value="{{ group.id }}">{{ group.name }} ({{ group.contacts|length }} contacts)</option>
@@ -40,28 +46,28 @@
                 </div>
                 
                 <!-- Template Selection Mode -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" data-i18n="template_source">Template Source</label>
-                    <div class="flex space-x-4 mb-2">
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="template_mode" value="select" checked onclick="toggleTemplateMode('select')" class="form-radio text-indigo-600">
-                            <span class="ml-2 text-gray-700 dark:text-gray-300" data-i18n="db_template">DB Template</span>
+                <div class="space-y-2">
+                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" data-i18n="template_source">Template Source</label>
+                    <div class="flex space-x-6 p-3 bg-gray-900 border border-gray-700">
+                        <label class="inline-flex items-center cursor-pointer group">
+                            <input type="radio" name="template_mode" value="select" checked onclick="toggleTemplateMode('select')" class="form-radio text-red-600 focus:ring-red-500 bg-gray-800 border-gray-600">
+                            <span class="ml-2 text-gray-300 group-hover:text-white font-mono text-sm uppercase" data-i18n="db_template">DB Template</span>
                         </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="template_mode" value="file" onclick="toggleTemplateMode('file')" class="form-radio text-indigo-600">
-                            <span class="ml-2 text-gray-700 dark:text-gray-300" data-i18n="file_template">File Template</span>
+                        <label class="inline-flex items-center cursor-pointer group">
+                            <input type="radio" name="template_mode" value="file" onclick="toggleTemplateMode('file')" class="form-radio text-red-600 focus:ring-red-500 bg-gray-800 border-gray-600">
+                            <span class="ml-2 text-gray-300 group-hover:text-white font-mono text-sm uppercase" data-i18n="file_template">File Template</span>
                         </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="template_mode" value="custom" onclick="toggleTemplateMode('custom')" class="form-radio text-indigo-600">
-                            <span class="ml-2 text-gray-700 dark:text-gray-300" data-i18n="create_custom">Create Custom</span>
+                        <label class="inline-flex items-center cursor-pointer group">
+                            <input type="radio" name="template_mode" value="custom" onclick="toggleTemplateMode('custom')" class="form-radio text-red-600 focus:ring-red-500 bg-gray-800 border-gray-600">
+                            <span class="ml-2 text-gray-300 group-hover:text-white font-mono text-sm uppercase" data-i18n="create_custom">Create Custom</span>
                         </label>
                     </div>
                 </div>
 
                 <!-- Select DB Template -->
-                <div id="select-template-div" class="mb-4">
-                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="template_id" data-i18n="select_db_template">Select Database Template</label>
-                    <select name="template_id" id="template_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <div id="select-template-div" class="space-y-1">
+                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="template_id" data-i18n="select_db_template">Select Database Template</label>
+                    <select name="template_id" id="template_id" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                         {% for template in templates %}
                         <option value="{{ template.id }}">{{ template.name }}</option>
                         {% endfor %}
@@ -69,9 +75,9 @@
                 </div>
 
                 <!-- Select File Template -->
-                <div id="file-template-div" class="mb-4 hidden">
-                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="file_template" data-i18n="select_file_template_label">Select File Template</label>
-                    <select name="file_template" id="file_template" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <div id="file-template-div" class="space-y-1 hidden">
+                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="file_template" data-i18n="select_file_template_label">Select File Template</label>
+                    <select name="file_template" id="file_template" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                         {% for file in file_templates %}
                         <option value="{{ file }}">{{ file }}</option>
                         {% endfor %}
@@ -79,21 +85,21 @@
                 </div>
 
                 <!-- Custom Template -->
-                <div id="custom-template-div" class="hidden">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="custom_subject" data-i18n="email_subject">Email Subject</label>
-                        <input type="text" name="custom_subject" id="custom_subject" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <div id="custom-template-div" class="hidden space-y-4">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="custom_subject" data-i18n="email_subject">Email Subject</label>
+                        <input type="text" name="custom_subject" id="custom_subject" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none">
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="custom_content" data-i18n="html_content">HTML Content</label>
-                        <textarea name="custom_content" id="custom_content" rows="5" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-                        <p class="text-xs text-gray-500 mt-1">Use HTML. You can use {{ '{{name}}' }} for personalization.</p>
+                    <div class="space-y-1">
+                        <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="custom_content" data-i18n="html_content">HTML Content</label>
+                        <textarea name="custom_content" id="custom_content" rows="5" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none"></textarea>
+                        <p class="text-xs text-gray-500 mt-1 font-mono">Use HTML. You can use {{ '{{name}}' }} for personalization.</p>
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500" data-i18n="cancel">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" data-i18n="create_campaign">Create Campaign</button>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-700">
+                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="px-6 py-3 bg-gray-700 text-gray-300 font-bold uppercase tracking-wider hover:bg-gray-600 transition-colors rounded-none" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-6 py-3 bg-red-600 text-white font-bold uppercase tracking-widest hover:bg-red-700 transition-all transform hover:scale-[1.02] shadow-[0_0_15px_rgba(220,38,38,0.5)] rounded-none" data-i18n="create_campaign">Create Campaign</button>
                 </div>
             </form>
         </div>
@@ -297,18 +303,24 @@
 </div>
 
 <!-- Edit Campaign Modal -->
-<div id="editCampaignModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white dark:bg-gray-800">
+<div id="editCampaignModal" class="fixed inset-0 bg-black/80 hidden overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="relative p-6 border border-gray-700 w-full max-w-md shadow-2xl rounded-xl bg-gray-800 transform transition-all overflow-hidden max-h-[90vh] overflow-y-auto">
+        <!-- Decorative corner markers -->
+        <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
+        <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-red-600"></div>
+        <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-red-600"></div>
+        <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-600"></div>
+
         <div class="mt-3">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" data-i18n="edit_template">Edit Campaign</h3>
-            <form id="editCampaignForm" method="POST">
-                <div class="mb-4">
-                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="edit_campaign_name" data-i18n="campaign_name">Campaign Name</label>
-                    <input type="text" name="name" id="edit_campaign_name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+            <h3 class="text-2xl font-display text-white tracking-widest uppercase text-center mb-6 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]" data-i18n="edit_template">Edit Campaign</h3>
+            <form id="editCampaignForm" method="POST" class="space-y-6">
+                <div class="space-y-1">
+                    <label class="block text-xs font-mono text-gray-400 uppercase tracking-wider" for="edit_campaign_name" data-i18n="campaign_name">Campaign Name</label>
+                    <input type="text" name="name" id="edit_campaign_name" class="block w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all font-mono rounded-none" required>
                 </div>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="document.getElementById('editCampaignModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500" data-i18n="cancel">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" data-i18n="save_changes">Save Changes</button>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-700">
+                    <button type="button" onclick="document.getElementById('editCampaignModal').classList.add('hidden')" class="px-6 py-3 bg-gray-700 text-gray-300 font-bold uppercase tracking-wider hover:bg-gray-600 transition-colors rounded-none" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-6 py-3 bg-red-600 text-white font-bold uppercase tracking-widest hover:bg-red-700 transition-all transform hover:scale-[1.02] shadow-[0_0_15px_rgba(220,38,38,0.5)] rounded-none" data-i18n="save_changes">Save Changes</button>
                 </div>
             </form>
         </div>
