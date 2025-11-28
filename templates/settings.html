@@ -149,4 +149,23 @@
         </div>
     </form>
 </div>
+
+<!-- Database Management -->
+<div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-2xl">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-i18n="database_management">Database Management</h3>
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg mb-6 border border-yellow-200 dark:border-yellow-800">
+        <p class="text-sm text-yellow-800 dark:text-yellow-200">
+            <span class="font-bold">Warning:</span> Uploading a database file will replace the current database. All existing data on this server will be overwritten.
+        </p>
+    </div>
+    <form action="{{ url_for('upload_db') }}" method="POST" enctype="multipart/form-data" onsubmit="return confirm('Are you sure you want to replace the database? This action cannot be undone.');">
+        <div class="mb-4">
+            <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="db_file">Upload Database File (.db)</label>
+            <input type="file" name="file" id="db_file" accept=".db,.sqlite" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900 dark:file:text-indigo-300">
+        </div>
+        <div class="flex justify-end">
+            <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Restore Database</button>
+        </div>
+    </form>
+</div>
 {% endblock %}
