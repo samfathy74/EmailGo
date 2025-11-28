@@ -992,8 +992,12 @@ def check_server_status(server_id):
     # Check SMTP
     try:
         import smtplib
-        smtp = smtplib.SMTP(server.smtp_server, server.smtp_port, timeout=5)
-        smtp.starttls()
+        if server.smtp_port == 465:
+            smtp = smtplib.SMTP_SSL(server.smtp_server, server.smtp_port, timeout=5)
+        else:
+            smtp = smtplib.SMTP(server.smtp_server, server.smtp_port, timeout=5)
+            smtp.starttls()
+            
         smtp.login(server.smtp_email, server.smtp_password)
         smtp.quit()
         smtp_status = True
