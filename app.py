@@ -44,6 +44,7 @@ with app.app_context():
         admin = User(username='admin', password='adminpassword')
         db.session.add(admin)
         db.session.commit()
+        print("Default admin user created: admin / adminpassword")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -745,6 +746,26 @@ def upload_db():
         
     return redirect(url_for('settings'))
 
+@app.route('/settings/change_password', methods=['POST'])
+@login_required
+def change_password():
+    old_password = request.form.get('old_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+
+    if not old_password or not new_password or not confirm_password:
+        return jsonify({'success': False, 'message': 'All fields are required.'})
+
+    if current_user.password != old_password:
+        return jsonify({'success': False, 'message': 'Incorrect old password.'})
+
+    if new_password != confirm_password:
+        return jsonify({'success': False, 'message': 'New passwords do not match.'})
+
+    current_user.password = new_password
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Password updated successfully.'})
+
 @app.route('/contacts/<int:contact_id>/delete', methods=['POST'])
 @login_required
 def delete_contact(contact_id):
@@ -848,8 +869,6 @@ def edit_server(server_id):
     db.session.commit()
     flash('Server updated successfully.', 'success')
     return redirect(url_for('settings'))
-
-
 
 
 if __name__ == '__main__':
