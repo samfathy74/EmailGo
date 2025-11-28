@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
 from database import db, Contact, Template, Campaign, EmailLog, Reply, Settings, Server, ContactGroup, User
 from sqlalchemy import text
 from email_utils import send_email, check_replies
@@ -54,6 +54,18 @@ with app.app_context():
             conn.commit()
     except Exception:
         pass # Column likely exists
+
+    # Reset stuck campaigns
+    try:
+        stuck_campaigns = Campaign.query.filter_by(status='sending').all()
+        if stuck_campaigns:
+            for campaign in stuck_campaigns:
+                campaign.status = 'failed'
+                campaign.error_message = "Campaign interrupted by server restart."
+            db.session.commit()
+            print(f"Reset {len(stuck_campaigns)} stuck campaigns to failed.")
+    except Exception as e:
+        print(f"Error resetting stuck campaigns: {e}")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -948,10 +960,34 @@ def edit_server(server_id):
     flash('Server updated successfully.', 'success')
     return redirect(url_for('settings'))
 
+@app.route('/settings/download_db')
+@login_required
+def download_db():
+    try:
+        instance_path = os.path.join(basedir, 'instance')
+        db_path = os.path.join(instance_path, 'email_marketing.db')
+        
+        if not os.path.exists(db_path):
+            # Fallback to root if not in instance
+            db_path = os.path.join(basedir, 'email_marketing.db')
+            
+        if os.path.exists(db_path):
+            return send_file(db_path, as_attachment=True, download_name='email_marketing_backup.db')
+        else:
+            flash('Database file not found.', 'error')
+            return redirect(url_for('settings'))
+    except Exception as e:
+        flash(f'Error downloading database: {str(e)}', 'error')
+        return redirect(url_for('settings'))
+
 @app.route('/settings/server/<int:server_id>/check_status')
 @login_required
 def check_server_status(server_id):
     server = Server.query.get_or_404(server_id)
+    
+    smtp_status = False
+    imap_status = False
+    error_message = ""
     
     # Check SMTP
     try:
@@ -960,16 +996,37 @@ def check_server_status(server_id):
         smtp.starttls()
         smtp.login(server.smtp_email, server.smtp_password)
         smtp.quit()
-        
-        # Check IMAP (optional, but good for completeness)
+        smtp_status = True
+    except Exception as e:
+        error_message += f"SMTP Error: {str(e)}. "
+
+    # Check IMAP
+    try:
         import imaplib
+        # Some servers don't support IMAP, so if the server is clearly not an IMAP server (like smtp-relay), this will fail.
+        # We'll try to connect.
         imap = imaplib.IMAP4_SSL(server.imap_server, timeout=5)
         imap.login(server.smtp_email, server.smtp_password)
         imap.logout()
-        
-        return jsonify({'success': True})
+        imap_status = True
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
+        error_message += f"IMAP Error: {str(e)}."
+        
+    # Determine overall status
+    # If SMTP works, we can consider it "Partially Online" or just "Online" for sending.
+    # But for now, let's return the specific details.
+    
+    success = smtp_status and imap_status
+    
+    # If only SMTP works, it's useful for sending but not replies.
+    # We will return success=False if either fails, but provide the specific message.
+    
+    return jsonify({
+        'success': success, 
+        'smtp_status': smtp_status,
+        'imap_status': imap_status,
+        'message': error_message.strip()
+    })
 
 
 

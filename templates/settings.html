@@ -236,6 +236,17 @@
                     <span class="font-bold block mb-1 uppercase tracking-wider" data-i18n="overwrite_database_warning">Warning: Uploading a database file will replace the current database. All existing data on this server will be overwritten.</span>
                 </p>
             </div>
+
+            <!-- Download Button -->
+            <div class="mb-8 p-6 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                <h4 class="text-lg font-bold text-gray-800 dark:text-white mb-2 uppercase tracking-wide">Backup Database</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Download a copy of your current database to your local machine.</p>
+                <a href="{{ url_for('download_db') }}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg rounded-none">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Download Backup
+                </a>
+            </div>
+
             <form id="uploadDbForm" action="{{ url_for('upload_db') }}" method="POST" enctype="multipart/form-data">
                 <div class="mb-6">
                     <label class="block text-xs font-mono text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2" for="db_file" data-i18n="upload_db_file">Upload Database File (.db)</label>
@@ -490,18 +501,28 @@
             const data = await response.json();
 
             if (data.success) {
-                statusEl.classList.remove('bg-gray-100', 'text-gray-600');
+                statusEl.classList.remove('bg-gray-100', 'text-gray-600', 'bg-red-100', 'text-red-800');
                 statusEl.classList.add('bg-green-100', 'text-green-800');
-                dotEl.classList.remove('bg-gray-400');
+                dotEl.classList.remove('bg-gray-400', 'bg-red-500');
                 dotEl.classList.add('bg-green-500');
                 textEl.textContent = 'Online';
+                statusEl.title = 'Connected successfully';
             } else {
-                statusEl.classList.remove('bg-gray-100', 'text-gray-600');
+                statusEl.classList.remove('bg-gray-100', 'text-gray-600', 'bg-green-100', 'text-green-800');
                 statusEl.classList.add('bg-red-100', 'text-red-800');
-                dotEl.classList.remove('bg-gray-400');
+                dotEl.classList.remove('bg-gray-400', 'bg-green-500');
                 dotEl.classList.add('bg-red-500');
-                textEl.textContent = 'Offline';
-                statusEl.title = data.message; // Show error on hover
+                
+                // Detailed status
+                if (data.smtp_status && !data.imap_status) {
+                    textEl.textContent = 'SMTP Only';
+                } else if (!data.smtp_status && data.imap_status) {
+                    textEl.textContent = 'IMAP Only';
+                } else {
+                    textEl.textContent = 'Offline';
+                }
+                
+                statusEl.title = data.message; // Show detailed error on hover
             }
         } catch (error) {
             statusEl.classList.remove('bg-gray-100', 'text-gray-600');
