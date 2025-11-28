@@ -24,7 +24,11 @@ def get_file_templates():
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = r'sqlite:///email_marketing.db'
+# Use environment variable for DB URL (Railway) or fallback to the provided public connection string for local dev
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:tDRFjOnzWcVIoUceUgJETUERiieRREmz@interchange.proxy.rlwy.net:41454/railway')
+# Fix for some SQLAlchemy versions if the URL starts with postgres://
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
 app.config['SECRET_KEY'] = 'warzone_secure_key_998877' # Changed to a more "secure" looking key
 db.init_app(app)
 

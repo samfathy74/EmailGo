@@ -6,3 +6,4 @@ openpyxl
 pytz
 requests
 gunicorn
+psycopg2-binary
