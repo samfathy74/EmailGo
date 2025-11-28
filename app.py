@@ -22,12 +22,19 @@ def get_file_templates():
     return [os.path.basename(f) for f in files]
 
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from dotenv import load_dotenv
+
+load_dotenv() # Load environment variables from .env file
 
 app = Flask(__name__)
-# Use environment variable for DB URL (Railway) or fallback to the provided public connection string for local dev
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:tDRFjOnzWcVIoUceUgJETUERiieRREmz@interchange.proxy.rlwy.net:41454/railway')
+# Use environment variable for DB URL
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+if not app.config['SQLALCHEMY_DATABASE_URI']:
+    # Fallback to local sqlite if no DATABASE_URL is set (optional, but good for safety)
+    app.config['SQLALCHEMY_DATABASE_URI'] = r'sqlite:///email_marketing.db'
+
 # Fix for some SQLAlchemy versions if the URL starts with postgres://
-if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
+if app.config['SQLALCHEMY_DATABASE_URI'] and app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
 app.config['SECRET_KEY'] = 'warzone_secure_key_998877' # Changed to a more "secure" looking key
 db.init_app(app)
@@ -49,7 +56,6 @@ with app.app_context():
         admin = User(username='admin', password='adminpassword')
         db.session.add(admin)
         db.session.commit()
-        print("Default admin user created: admin / adminpassword")
     
     # Migration for error_message column
     try:
@@ -1040,4 +1046,4 @@ def check_server_status(server_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
