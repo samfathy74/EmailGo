@@ -1,8 +1,6 @@
-Flask
-Flask-SQLAlchemy
-Flask-Login
-SQLAlchemy
-openpyxl
-pytz
-requests
-gunicorn
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+openpyxl==3.1.2
+python-dotenv==1.0.0
+pytz==2023.3.post1
