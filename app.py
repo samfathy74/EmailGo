@@ -706,6 +706,46 @@ def settings():
     servers = Server.query.all()
     return render_template('settings.html', servers=servers)
 
+@app.route('/settings/upload_db', methods=['POST'])
+@login_required
+def upload_db():
+    if 'file' not in request.files:
+        flash('No file part', 'error')
+        return redirect(url_for('settings'))
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file', 'error')
+        return redirect(url_for('settings'))
+    
+    if file and (file.filename.endswith('.db') or file.filename.endswith('.sqlite')):
+        try:
+            # Close DB session to release locks
+            db.session.remove()
+            
+            # Determine path
+            # Assuming standard Flask instance path or relative to app
+            instance_path = os.path.join(basedir, 'instance')
+            if not os.path.exists(instance_path):
+                os.makedirs(instance_path)
+                
+            db_path = os.path.join(instance_path, 'email_marketing.db')
+            backup_path = db_path + '.bak'
+            
+            # Backup existing
+            if os.path.exists(db_path):
+                shutil.copy2(db_path, backup_path)
+            
+            # Save new file
+            file.save(db_path)
+            
+            flash('Database restored successfully. The application state has been updated.', 'success')
+        except Exception as e:
+            flash(f'Error restoring database: {str(e)}', 'error')
+    else:
+        flash('Invalid file type. Please upload a .db or .sqlite file.', 'error')
+        
+    return redirect(url_for('settings'))
+
 @app.route('/contacts/<int:contact_id>/delete', methods=['POST'])
 @login_required
 def delete_contact(contact_id):
@@ -810,45 +850,7 @@ def edit_server(server_id):
     flash('Server updated successfully.', 'success')
     return redirect(url_for('settings'))
 
-@app.route('/settings/upload_db', methods=['POST'])
-@login_required
-def upload_db():
-    if 'file' not in request.files:
-        flash('No file part', 'error')
-        return redirect(url_for('settings'))
-    file = request.files['file']
-    if file.filename == '':
-        flash('No selected file', 'error')
-        return redirect(url_for('settings'))
-    
-    if file and (file.filename.endswith('.db') or file.filename.endswith('.sqlite')):
-        try:
-            # Close DB session to release locks
-            db.session.remove()
-            
-            # Determine path
-            # Assuming standard Flask instance path or relative to app
-            instance_path = os.path.join(basedir, 'instance')
-            if not os.path.exists(instance_path):
-                os.makedirs(instance_path)
-                
-            db_path = os.path.join(instance_path, 'email_marketing.db')
-            backup_path = db_path + '.bak'
-            
-            # Backup existing
-            if os.path.exists(db_path):
-                shutil.copy2(db_path, backup_path)
-            
-            # Save new file
-            file.save(db_path)
-            
-            flash('Database restored successfully. The application state has been updated.', 'success')
-        except Exception as e:
-            flash(f'Error restoring database: {str(e)}', 'error')
-    else:
-        flash('Invalid file type. Please upload a .db or .sqlite file.', 'error')
-        
-    return redirect(url_for('settings'))
+
 
 
 if __name__ == '__main__':
