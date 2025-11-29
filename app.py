@@ -36,7 +36,7 @@ if not app.config['SQLALCHEMY_DATABASE_URI']:
 # Fix for some SQLAlchemy versions if the URL starts with postgres://
 if app.config['SQLALCHEMY_DATABASE_URI'] and app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
-app.config['SECRET_KEY'] = 'warzone_secure_key_998877' # Changed to a more "secure" looking key
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 db.init_app(app)
 
 login_manager = LoginManager()
@@ -1003,9 +1003,9 @@ def check_server_status(server_id):
     try:
         import smtplib
         if server.smtp_port == 465:
-            smtp = smtplib.SMTP_SSL(server.smtp_server, server.smtp_port, timeout=5)
+            smtp = smtplib.SMTP_SSL(server.smtp_server, server.smtp_port, timeout=15)
         else:
-            smtp = smtplib.SMTP(server.smtp_server, server.smtp_port, timeout=5)
+            smtp = smtplib.SMTP(server.smtp_server, server.smtp_port, timeout=15)
             smtp.starttls()
             
         smtp.login(server.smtp_email, server.smtp_password)
@@ -1019,21 +1019,24 @@ def check_server_status(server_id):
         import imaplib
         # Some servers don't support IMAP, so if the server is clearly not an IMAP server (like smtp-relay), this will fail.
         # We'll try to connect.
-        imap = imaplib.IMAP4_SSL(server.imap_server, timeout=5)
-        imap.login(server.smtp_email, server.smtp_password)
-        imap.logout()
-        imap_status = True
+        if server.imap_server and server.imap_server.strip():
+            imap = imaplib.IMAP4_SSL(server.imap_server, timeout=15)
+            imap.login(server.smtp_email, server.smtp_password)
+            imap.logout()
+            imap_status = True
+        else:
+            # If no IMAP server provided (or empty), consider it skipped/OK or just False but not an error
+            pass
     except Exception as e:
         error_message += f"IMAP Error: {str(e)}."
         
     # Determine overall status
-    # If SMTP works, we can consider it "Partially Online" or just "Online" for sending.
-    # But for now, let's return the specific details.
+    # If SMTP works, we consider it a success for sending purposes.
+    # IMAP failure is a warning.
     
-    success = smtp_status and imap_status
-    
-    # If only SMTP works, it's useful for sending but not replies.
-    # We will return success=False if either fails, but provide the specific message.
+    success = smtp_status
+    if smtp_status and not imap_status:
+        error_message += " (Warning: SMTP connected but IMAP failed. You can send emails but replies won't be tracked.)"
     
     return jsonify({
         'success': success, 
@@ -1041,8 +1044,6 @@ def check_server_status(server_id):
         'imap_status': imap_status,
         'message': error_message.strip()
     })
-
-
 
 
 if __name__ == '__main__':
